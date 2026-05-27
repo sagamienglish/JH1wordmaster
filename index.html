@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Word Master Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B5EE8',
+                        primaryHover: '#304BD1',
+                        secondary: '#10B981',
+                        surface: '#FFFFFF',
+                        background: '#F4F7F9',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+        
+        /* Matching Card Stable 2D Crossfade Animation */
+        .card-inner { position: relative; width: 100%; height: 100%; }
+        .card-front, .card-back { 
+            position: absolute; inset: 0; 
+            display: flex; align-items: center; justify-content: center; 
+            border-radius: 0.75rem; padding: 0.5rem; text-align: center; word-break: break-word; 
+            transition: all 0.25s ease-out;
+        }
+        .card-front { background-color: #3B5EE8; color: white; font-size: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 2; transform: scale(1); opacity: 1; }
+        .card-back { background-color: white; color: #1F2937; border: 2px solid #3B5EE8; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 1; transform: scale(0.9); opacity: 0; }
+        
+        .card.flipped .card-front { transform: scale(1.1); opacity: 0; z-index: 1; pointer-events: none; }
+        .card.flipped .card-back { transform: scale(1); opacity: 1; z-index: 2; }
+        .card.matched { opacity: 0; pointer-events: none; transition: opacity 0.3s 0.5s; }
+
+        /* VS Screen */
+        #screen-vs { position: fixed; inset: 0; z-index: 50; background: white; flex-direction: column; overflow: hidden; }
+        .vs-half { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
+        .vs-top { transform: rotate(180deg); background-color: #FEE2E2; }
+        .vs-bottom { background-color: #E0E7FF; }
+        .vs-divider { height: 8px; background-color: #1F2937; width: 100%; z-index: 10; position: relative; }
+        
+        /* Animations */
+        @keyframes pop { 0% { transform: scale(0.95); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .animate-pop { animation: pop 0.3s ease-out; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-background text-slate-800 h-screen w-screen overflow-hidden font-sans flex">
+
+    <!-- Desktop Sidebar -->
+    <aside class="hidden md:flex w-64 flex-col bg-surface border-r border-slate-200 h-full p-6 shadow-sm z-20 shrink-0">
+        <div class="text-2xl font-extrabold text-primary mb-10 flex items-center gap-3">
+            <div class="bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center shadow-md">W</div>
+            Word Master
+        </div>
+        <nav class="space-y-2 flex-1">
+            <button onclick="navTo('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-4 p-4 rounded-2xl bg-blue-50 text-primary font-bold transition-colors">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </button>
+            <button onclick="navTo('vocabulary')" id="nav-vocabulary" class="w-full flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-slate-50 font-bold transition-colors">
+                <i data-lucide="library" class="w-5 h-5"></i> 語彙リスト
+            </button>
+        </nav>
+        <div class="mt-auto">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div class="text-xs text-slate-400 font-bold mb-1">CPU LEVEL</div>
+                <div class="text-lg font-bold text-slate-700 flex items-center gap-2">
+                    <i data-lucide="bot" class="w-5 h-5 text-primary"></i> Lv. <span id="display-cpu-level">1</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative overflow-y-auto overflow-x-hidden pb-20 md:pb-0">
+        
+        <!-- ================= 1. Dashboard Screen ================= -->
+        <div id="screen-dashboard" class="screen flex flex-col p-6 md:p-8 max-w-6xl mx-auto min-h-full">
+            <h1 class="text-3xl font-extrabold text-slate-800 mb-1 tracking-tight">Welcome back!</h1>
+            <p class="text-slate-500 font-medium mb-6">今日も少しずつ語彙力を鍛えよう</p>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-orange-100 text-orange-500 p-3 rounded-xl"><i data-lucide="flame" class="w-6 h-6"></i></div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-bold mb-1">連続ログイン</div>
+                        <div class="text-2xl font-extrabold text-slate-700"><span id="days-count">1</span> <span class="text-sm font-normal text-slate-500">日</span></div>
+                    </div>
+                </div>
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                    <div class="bg-blue-100 text-primary p-3 rounded-xl"><i data-lucide="clock" class="w-6 h-6"></i></div>
+                    <div>
+                        <div class="text-xs text-slate-400 font-bold mb-1">総学習時間</div>
+                        <div class="text-2xl font-extrabold text-slate-700"><span id="time-count">0分</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-lg font-bold text-slate-800 mb-3">Jump back in</h2>
+            
+            <!-- Mode Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- 4択 -->
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i></div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">４択クイズ</h3>
+                        <p class="text-slate-500 text-xs mb-4">意味を選ぶクイズ（全5問）</p>
+                    </div>
+                    <button onclick="initAudio(); openCategoryModal('4choice')" class="w-full bg-primary hover:bg-primaryHover text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Start</button>
+                </div>
+                
+                <!-- マッチング -->
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="layout-grid" class="w-5 h-5"></i></div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">マッチング</h3>
+                        <p class="text-slate-500 text-xs mb-4">ペアを素早く見つける</p>
+                    </div>
+                    <button onclick="initAudio(); startMode('matching', 'all')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Play</button>
+                </div>
+
+                <!-- タイピング -->
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
+                    <div>
+                        <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="keyboard" class="w-5 h-5"></i></div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">タイピング</h3>
+                        <p class="text-slate-500 text-xs mb-4">正しいスペルを入力（全5問）</p>
+                    </div>
+                    <button onclick="initAudio(); openCategoryModal('typing')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Start</button>
+                </div>
+
+                <!-- カルタ対戦 -->
+                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden hover:shadow-md transition-shadow">
+                    <div class="absolute -right-4 -top-4 w-16 h-16 bg-red-50 rounded-full opacity-50 pointer-events-none"></div>
+                    <div>
+                        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="swords" class="w-5 h-5"></i></div>
+                        <h3 class="text-base font-bold text-slate-800 mb-1">カルタ対戦</h3>
+                        <p class="text-slate-500 text-xs mb-4">1台で早押し・5点先取</p>
+                    </div>
+                    <button onclick="initAudio(); showVsSetup()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm relative z-10">Setup</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 2. Vocabulary List Screen ================= -->
+        <div id="screen-vocabulary" class="screen hidden flex-col p-6 md:p-8 max-w-6xl mx-auto min-h-full">
+            <h2 class="text-2xl font-extrabold text-slate-800 mb-1">語彙リスト</h2>
+            <p class="text-slate-500 text-sm mb-6 font-medium">🔥マークは過去に間違えた苦手な単語です。</p>
+            <div id="vocab-container" class="w-full">
+                <!-- JavaScriptで生成 -->
+            </div>
+        </div>
+
+        <!-- ================= 3. 4-Choice Screen ================= -->
+        <div id="screen-4choice" class="screen hidden flex-col p-4 md:p-8 max-w-3xl mx-auto min-h-full">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-sm">Q <span id="qc-current">1</span> / 5</div>
+            </div>
+            
+            <div class="flex-grow flex flex-col items-center justify-center w-full">
+                <button id="qc-audio-btn" onclick="replayAudio()" class="mb-4 text-primary bg-blue-50 p-3 rounded-full hover:bg-blue-100 transition-colors hidden"><i data-lucide="volume-2" class="w-6 h-6"></i></button>
+                
+                <div id="qc-text" class="text-3xl md:text-5xl font-extrabold text-slate-800 mb-10 text-center w-full px-2">問題</div>
+                
+                <div id="qc-choices" class="w-full grid grid-cols-1 md:grid-cols-2 gap-3 px-2">
+                    <!-- 選択肢 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 4. Typing Screen ================= -->
+        <div id="screen-typing" class="screen hidden flex-col p-4 md:p-8 max-w-3xl mx-auto min-h-full">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="bg-amber-100 text-amber-700 font-bold px-4 py-1.5 rounded-full text-sm">Q <span id="typ-current">1</span> / 5</div>
+            </div>
+            
+            <div class="flex-grow flex flex-col items-center justify-start pt-4 w-full">
+                <div class="text-slate-500 mb-1 font-bold uppercase tracking-wider text-xs">Translate to English</div>
+                <div id="typ-q" class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-6 text-center">問題</div>
+                
+                <input type="text" id="typ-input" placeholder="Type here" autocomplete="off" spellcheck="false"
+                    class="w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-slate-200 rounded-xl mb-2 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all shadow-sm">
+                
+                <!-- ギブアップボタン＆フィードバック -->
+                <div class="w-full max-w-md flex justify-between items-center mb-2 px-2">
+                    <div id="typ-feedback" class="h-8 text-lg font-bold flex-1 text-left"></div>
+                    <button id="typ-giveup-btn" onclick="handleTypingGiveUp()" class="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors bg-slate-100 px-3 py-1 rounded-full">わからない?</button>
+                </div>
+
+                <!-- ソフトウェアキーボード -->
+                <div id="software-keyboard" class="w-full max-w-lg mx-auto bg-slate-100 p-2 rounded-xl mt-2 select-none">
+                    <!-- JSでキーを生成 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 5. Matching Screen ================= -->
+        <div id="screen-matching" class="screen hidden flex-col p-4 md:p-8 max-w-4xl mx-auto min-h-full">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="text-slate-500 font-bold flex items-center gap-2"><i data-lucide="timer" class="w-5 h-5"></i> <span id="match-timer">0.0</span>s</div>
+            </div>
+            
+            <div class="flex-grow flex flex-col items-center justify-center w-full px-2 pb-8">
+                <!-- aspect-[4/3] で高さを幅に連動させて潰れを完全に防止 -->
+                <div id="matching-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-2xl mx-auto">
+                    <!-- カード -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="md:hidden absolute bottom-0 w-full bg-surface border-t border-slate-200 flex justify-around p-2 z-30 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <button onclick="navTo('dashboard')" id="mob-dashboard" class="flex flex-col items-center p-2 text-primary">
+            <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Home</span>
+        </button>
+        <button onclick="navTo('vocabulary')" id="mob-vocabulary" class="flex flex-col items-center p-2 text-slate-400">
+            <i data-lucide="library" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Words</span>
+        </button>
+    </nav>
+
+    <!-- ================= 6. VS Screen (Absolute Full Screen) ================= -->
+    <div id="screen-vs" class="hidden">
+        <!-- P2 (Top) -->
+        <div class="vs-half vs-top" id="vs-player2">
+            <div class="absolute top-6 right-6 bg-white/80 px-4 py-2 rounded-2xl font-bold text-red-600 shadow-sm z-20">P2: <span id="score-p2">0</span></div>
+            <div id="cpu-label" class="absolute top-6 left-6 bg-slate-800 text-white px-3 py-1.5 rounded-xl font-bold shadow-sm hidden items-center gap-1.5 z-20 text-sm">
+                <i data-lucide="bot" class="w-4 h-4"></i> Lv.<span id="vs-cpu-level-display">1</span>
+            </div>
+            
+            <div id="target-p2" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center">Target</div>
+            <div id="choices-p2" class="grid grid-cols-3 gap-2 w-full max-w-xl px-2"></div>
+            
+            <div id="lock-p2" class="absolute inset-0 bg-red-100/60 hidden flex items-center justify-center z-30">
+                <span class="bg-red-600 text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg">お手つき (Wait)</span>
+            </div>
+        </div>
+        
+        <!-- Divider -->
+        <div class="vs-divider flex items-center justify-center">
+            <div id="vs-round" class="absolute bg-slate-800 text-white font-bold px-6 py-1.5 rounded-full text-sm shadow-md">5 Point Match</div>
+            <button onclick="endVsEarly()" class="absolute left-4 bg-slate-700 text-white p-2 rounded-full shadow-lg hover:bg-slate-600 z-20"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        
+        <!-- P1 (Bottom) -->
+        <div class="vs-half vs-bottom" id="vs-player1">
+            <div class="absolute top-6 right-6 bg-white/80 px-4 py-2 rounded-2xl font-bold text-primary shadow-sm z-20">P1: <span id="score-p1">0</span></div>
+            <div id="target-p1" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center">Target</div>
+            <div id="choices-p1" class="grid grid-cols-3 gap-2 w-full max-w-xl px-2"></div>
+            
+            <div id="lock-p1" class="absolute inset-0 bg-blue-100/60 hidden flex items-center justify-center z-30">
+                <span class="bg-primary text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg">お手つき (Wait)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= Modals ================= -->
+    <div id="modal-category" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-surface rounded-3xl p-6 w-full max-w-sm shadow-2xl transform transition-all animate-pop">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-extrabold text-slate-800">出題範囲を選ぶ</h2>
+                <button onclick="closeModal('modal-category')" class="text-slate-400 hover:bg-slate-100 p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div id="category-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>
+        </div>
+    </div>
+
+    <div id="modal-vs" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-surface rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl animate-pop">
+            <h2 class="text-2xl font-extrabold text-slate-800 mb-1">対戦モード</h2>
+            <p class="text-slate-500 mb-6 text-sm">5点先取ルール。お手つきは休み。</p>
+            <button onclick="startVsMode(true)" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3.5 rounded-xl mb-3 text-base flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95">
+                <i data-lucide="bot" class="w-5 h-5"></i> 1人で遊ぶ (vs CPU)
+            </button>
+            <button onclick="startVsMode(false)" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl mb-4 text-base flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95">
+                <i data-lucide="users" class="w-5 h-5"></i> 2人で遊ぶ (対人戦)
+            </button>
+            <button onclick="closeModal('modal-vs')" class="text-slate-400 font-bold py-2 text-sm hover:text-slate-600">キャンセル</button>
+        </div>
+    </div>
+
+    <div id="modal-result" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-surface rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl animate-pop relative overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+            <div id="res-icon" class="mx-auto w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4 relative z-10"></div>
+            <h2 id="res-title" class="text-2xl font-extrabold text-slate-800 mb-2 relative z-10"></h2>
+            <p id="res-desc" class="text-slate-500 mb-6 text-sm relative z-10"></p>
+            <div id="res-extra" class="mb-6 text-left relative z-10 text-sm"></div>
+            <button onclick="navTo('dashboard'); closeModal('modal-result')" class="w-full bg-primary hover:bg-primaryHover text-white font-bold py-3 rounded-xl shadow-md relative z-10">トップに戻る</button>
+        </div>
+    </div>
+
+    <!-- ================= JavaScript ================= -->
+    <script>
+        // --- 0. Web Audio API (効果音) ---
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(1760, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'match') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.1);
+                osc.frequency.setValueAtTime(783.99, now + 0.2);
+                gainNode.gain.setValueAtTime(0.05, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+        }
+
+        // --- 1. Data ---
+        const wordData = [
+            {en: "sport", jp: "スポーツ", cat: "My Dictionary 3"}, {en: "badminton", jp: "バドミントン", cat: "My Dictionary 3"},
+            {en: "baseball", jp: "野球", cat: "My Dictionary 3"}, {en: "cool", jp: "かっこいい", cat: "My Dictionary 3"},
+            {en: "famous", jp: "有名な", cat: "My Dictionary 3"}, {en: "friendly", jp: "親しみのある", cat: "My Dictionary 3"},
+            {en: "brave", jp: "勇敢な", cat: "My Dictionary 3"}, {en: "guitar", jp: "ギター", cat: "My Dictionary 3"},
+            {en: "trumpet", jp: "トランペット", cat: "My Dictionary 3"}, {en: "violin", jp: "バイオリン", cat: "My Dictionary 3"},
+            {en: "color", jp: "色", cat: "My Dictionary 4"}, {en: "blue", jp: "青", cat: "My Dictionary 4"},
+            {en: "brown", jp: "茶色の", cat: "My Dictionary 4"}, {en: "cook", jp: "料理する", cat: "My Dictionary 4"},
+            {en: "listen to music", jp: "音楽を聞く", cat: "My Dictionary 4"}, {en: "swim", jp: "泳ぐ", cat: "My Dictionary 4"},
+            {en: "read books", jp: "本を読む", cat: "My Dictionary 4"}, {en: "run", jp: "走る", cat: "My Dictionary 4"},
+            {en: "big", jp: "大きい", cat: "My Dictionary 5"}, {en: "small", jp: "小さい", cat: "My Dictionary 5"},
+            {en: "book", jp: "本", cat: "My Dictionary 5"}, {en: "computer", jp: "コンピュータ", cat: "My Dictionary 5"},
+            {en: "shoe", jp: "くつ", cat: "My Dictionary 5"}, {en: "hard", jp: "かたい", cat: "My Dictionary 5"},
+            {en: "soft", jp: "やわらかい", cat: "My Dictionary 5"}, {en: "eraser", jp: "消しゴム", cat: "My Dictionary 5"},
+            {en: "smile", jp: "ほほえみ", cat: "Lesson 2"}, {en: "popular", jp: "人気のある", cat: "Lesson 2"},
+            {en: "voice", jp: "声", cat: "Lesson 2"}, {en: "singer", jp: "歌手", cat: "Lesson 2"},
+            {en: "speak", jp: "話す", cat: "Lesson 2"}, {en: "teach", jp: "教える", cat: "Lesson 2"},
+            {en: "language", jp: "言語、ことば", cat: "Lesson 2"}, {en: "forward", jp: "前へ", cat: "Lesson 2"},
+            {en: "treasure", jp: "宝物", cat: "Lesson 3"}, {en: "camera", jp: "カメラ", cat: "Lesson 3"},
+            {en: "dictionary", jp: "辞書", cat: "Lesson 3"}, {en: "online", jp: "オンラインの", cat: "Lesson 3"},
+            {en: "nickname", jp: "ニックネーム", cat: "Lesson 3"}, {en: "scary", jp: "恐ろしい", cat: "Lesson 3"},
+            {en: "traditional", jp: "伝統的な", cat: "Lesson 3"}, {en: "correct", jp: "正しい", cat: "Lesson 3"}
+        ];
+        const categories = ["全て", ...new Set(wordData.map(w => w.cat))];
+
+        // --- 2. State & Storage ---
+        let totalSeconds = parseInt(localStorage.getItem('wm_pro_sec'), 10);
+        if (isNaN(totalSeconds)) totalSeconds = 0;
+        
+        let lastLogin = localStorage.getItem('wm_pro_date');
+        let streak = parseInt(localStorage.getItem('wm_pro_streak'), 10) || 1;
+        let errors = JSON.parse(localStorage.getItem('wm_pro_errors')) || {};
+        let matchingRanks = JSON.parse(localStorage.getItem('wm_pro_ranks')) || [];
+        let cpuLevel = parseInt(localStorage.getItem('wm_pro_cpu'), 10) || 1;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkLogin();
+            updateTimeUI();
+            
+            setInterval(() => {
+                totalSeconds++;
+                localStorage.setItem('wm_pro_sec', totalSeconds.toString());
+                if(totalSeconds % 60 === 0) updateTimeUI();
+            }, 1000);
+            
+            document.getElementById('display-cpu-level').innerText = cpuLevel;
+            renderVocabulary();
+            renderKeyboard();
+            initTypingListener();
+        });
+
+        function checkLogin() {
+            const today = new Date().toDateString();
+            if (lastLogin !== today) {
+                const yesterday = new Date(Date.now() - 86400000).toDateString();
+                if (lastLogin === yesterday) streak++;
+                else if (lastLogin) streak = 1;
+                localStorage.setItem('wm_pro_date', today);
+                localStorage.setItem('wm_pro_streak', streak.toString());
+            }
+            document.getElementById('days-count').innerText = streak;
+        }
+
+        function updateTimeUI() {
+            let m = Math.floor(totalSeconds / 60);
+            let h = Math.floor(m / 60);
+            m = m % 60;
+            let str = h > 0 ? `${h}時間 ${m}分` : `${m}分`;
+            if (totalSeconds < 60) str = "0分";
+            document.getElementById('time-count').innerText = str;
+        }
+
+        function recordError(enWord) {
+            errors[enWord] = (errors[enWord] || 0) + 1;
+            localStorage.setItem('wm_pro_errors', JSON.stringify(errors));
+            renderVocabulary();
+        }
+
+        // --- 3. Utils & Navigation ---
+        function shuffle(array) { return array.slice().sort(() => Math.random() - 0.5); }
+        function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function navTo(tab) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('flex');
+            });
+            
+            const targetScreen = document.getElementById('screen-' + tab);
+            targetScreen.classList.remove('hidden');
+            targetScreen.classList.add('flex');
+            
+            ['dashboard', 'vocabulary'].forEach(t => {
+                const el = document.getElementById('nav-' + t);
+                if(el) el.className = (t === tab) ? "w-full flex items-center gap-4 p-4 rounded-2xl bg-blue-50 text-primary font-bold transition-colors" : "w-full flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-slate-50 font-bold transition-colors";
+                const mel = document.getElementById('mob-' + t);
+                if(mel) mel.className = (t === tab) ? "flex flex-col items-center p-2 text-primary" : "flex flex-col items-center p-2 text-slate-400";
+            });
+            window.scrollTo(0,0);
+        }
+
+        let lastUtterance = null;
+        function playAudio(text) {
+            if(!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+            lastUtterance = text;
+        }
+        function replayAudio() { if(lastUtterance) playAudio(lastUtterance); }
+
+        // --- 4. Vocabulary List ---
+        function renderVocabulary() {
+            const container = document.getElementById('vocab-container');
+            container.innerHTML = '';
+            categories.filter(c => c !== "全て").forEach(cat => {
+                const catWords = wordData.filter(w => w.cat === cat);
+                if(catWords.length === 0) return;
+                
+                const section = document.createElement('div');
+                section.className = "mb-8";
+                section.innerHTML = `<h3 class="text-lg font-bold text-slate-700 border-b border-slate-200 pb-2 mb-3">${cat}</h3>`;
+                
+                const grid = document.createElement('div');
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3";
+                
+                catWords.forEach(w => {
+                    const errCount = errors[w.en] || 0;
+                    const errBadge = errCount > 0 ? `<span class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="flame" class="w-3 h-3"></i> ${errCount}</span>` : '';
+                    
+                    const card = document.createElement('div');
+                    card.className = "bg-white rounded-xl p-3 border border-slate-200 flex justify-between items-center shadow-sm hover:border-primary/30 transition-colors";
+                    card.innerHTML = `
+                        <div class="flex flex-col">
+                            <span class="text-base font-bold text-slate-800">${w.en}</span>
+                            <span class="text-xs text-slate-500">${w.jp}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${errBadge}
+                            <button onclick="initAudio(); playAudio('${w.en}')" class="p-1.5 text-slate-400 hover:text-primary rounded-full hover:bg-blue-50 transition-colors"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+            lucide.createIcons();
+        }
+
+        // --- 5. Mode Start ---
+        let pendingMode = '';
+        function openCategoryModal(mode) {
+            pendingMode = mode;
+            const list = document.getElementById('category-list');
+            list.innerHTML = '';
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-primary hover:border-primary/50 font-bold py-3 px-4 rounded-xl transition-colors text-sm";
+                btn.innerText = cat;
+                btn.onclick = () => { closeModal('modal-category'); startMode(pendingMode, cat); };
+                list.appendChild(btn);
+            });
+            showModal('modal-category');
+        }
+
+        let currentQuizData = [];
+        function startMode(mode, category) {
+            navTo(mode);
+            let source = category === "全て" ? wordData : wordData.filter(w => w.cat === category);
+            currentQuizData = shuffle(source).slice(0, 5);
+            
+            if(mode === '4choice') init4Choice();
+            if(mode === 'typing') initTyping();
+            if(mode === 'matching') initMatching(source);
+        }
+
+        function showResult(title, desc, extraHtml = '') {
+            document.getElementById('res-title').innerText = title;
+            document.getElementById('res-desc').innerText = desc;
+            document.getElementById('res-extra').innerHTML = extraHtml;
+            
+            const iconBox = document.getElementById('res-icon');
+            if(title.includes("Win") || title.includes("Awesome") || title.includes("Level Up") || title.includes("Clear")) {
+                iconBox.className = "mx-auto w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4 relative z-10";
+                iconBox.innerHTML = '<i data-lucide="party-popper" class="w-8 h-8"></i>';
+            } else {
+                iconBox.className = "mx-auto w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mb-4 relative z-10";
+                iconBox.innerHTML = '<i data-lucide="thumbs-up" class="w-8 h-8"></i>';
+            }
+            showModal('modal-result');
+            lucide.createIcons();
+        }
+
+        // --- 6. 4-Choice ---
+        let qcIndex = 0;
+        function init4Choice() {
+            qcIndex = 0;
+            render4Choice();
+        }
+
+        function render4Choice() {
+            if(qcIndex >= 5) {
+                playSound('match');
+                showResult("Quiz Completed!", "5問やり遂げました！");
+                return;
+            }
+            
+            document.getElementById('qc-current').innerText = qcIndex + 1;
+            const target = currentQuizData[qcIndex];
+            
+            const isEnToJp = Math.random() > 0.5;
+            const audioBtn = document.getElementById('qc-audio-btn');
+            
+            if (isEnToJp) {
+                document.getElementById('qc-text').innerText = target.en;
+                audioBtn.classList.remove('hidden');
+                playAudio(target.en);
+            } else {
+                document.getElementById('qc-text').innerText = target.jp;
+                audioBtn.classList.add('hidden');
+            }
+            
+            let choices = [target];
+            while(choices.length < 4) {
+                let r = wordData[Math.floor(Math.random() * wordData.length)];
+                if(!choices.includes(r)) choices.push(r);
+            }
+            choices = shuffle(choices);
+            
+            const container = document.getElementById('qc-choices');
+            container.innerHTML = '';
+            
+            choices.forEach(c => {
+                let btn = document.createElement('button');
+                btn.className = 'w-full bg-surface border-2 border-slate-200 text-slate-700 font-extrabold py-4 rounded-xl text-lg hover:border-primary hover:bg-blue-50 transition-all shadow-sm';
+                btn.innerText = isEnToJp ? c.jp : c.en;
+                
+                btn.onclick = function() {
+                    initAudio();
+                    if(c === target) {
+                        playSound('correct');
+                        btn.className = 'w-full bg-secondary border-2 border-secondary text-white font-extrabold py-4 rounded-xl text-lg shadow-md animate-pop';
+                        Array.from(container.children).forEach(b => b.onclick = null);
+                        setTimeout(() => { qcIndex++; render4Choice(); }, 800);
+                    } else {
+                        playSound('wrong');
+                        btn.className = 'w-full bg-slate-100 border-2 border-slate-200 text-slate-400 font-extrabold py-4 rounded-xl text-lg pointer-events-none cursor-not-allowed';
+                        recordError(target.en);
+                        document.getElementById('qc-text').classList.add('animate-pulse');
+                        setTimeout(()=> document.getElementById('qc-text').classList.remove('animate-pulse'), 300);
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // --- 7. Typing ---
+        let typIndex = 0;
+        let currentTypTarget = null;
+
+        function renderKeyboard() {
+            const kb = document.getElementById('software-keyboard');
+            kb.innerHTML = '';
+            const rows = [
+                ['q','w','e','r','t','y','u','i','o','p'],
+                ['a','s','d','f','g','h','j','k','l'],
+                ['z','x','c','v','b','n','m']
+            ];
+            rows.forEach((row, rIndex) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'flex justify-center gap-1.5 mb-1.5 w-full';
+                
+                if (rIndex === 2) {
+                    const bsBtn = document.createElement('button');
+                    bsBtn.className = 'bg-slate-300 text-slate-700 rounded-lg shadow-[0_3px_0_#94a3b8] font-bold px-3 py-3 active:translate-y-1 active:shadow-none text-sm';
+                    bsBtn.innerHTML = '<i data-lucide="delete" class="w-5 h-5"></i>';
+                    bsBtn.onclick = () => {
+                        initAudio();
+                        const input = document.getElementById('typ-input');
+                        input.value = input.value.slice(0, -1);
+                    };
+                    rowDiv.appendChild(bsBtn);
+                }
+
+                row.forEach(char => {
+                    const btn = document.createElement('button');
+                    btn.className = 'bg-white text-slate-800 rounded-lg shadow-[0_3px_0_#cbd5e1] font-bold flex-1 py-3 uppercase active:translate-y-1 active:shadow-none max-w-[45px] text-lg';
+                    btn.innerText = char;
+                    btn.onclick = () => {
+                        initAudio();
+                        const input = document.getElementById('typ-input');
+                        input.value += char;
+                    };
+                    rowDiv.appendChild(btn);
+                });
+
+                if (rIndex === 2) {
+                    const entBtn = document.createElement('button');
+                    entBtn.className = 'bg-primary text-white rounded-lg shadow-[0_3px_0_#304bd1] font-bold px-4 py-3 active:translate-y-1 active:shadow-none text-sm';
+                    entBtn.innerText = 'ENTER';
+                    entBtn.onclick = () => {
+                        initAudio();
+                        handleTypingEnter();
+                    };
+                    rowDiv.appendChild(entBtn);
+                }
+                kb.appendChild(rowDiv);
+            });
+            lucide.createIcons();
+        }
+
+        function initTyping() {
+            typIndex = 0;
+            renderTyping();
+        }
+
+        function renderTyping() {
+            if(typIndex >= 5) {
+                playSound('match');
+                showResult("Typing Master!", "5問のスペル入力を完了しました。");
+                return;
+            }
+            
+            document.getElementById('typ-current').innerText = typIndex + 1;
+            currentTypTarget = currentQuizData[typIndex];
+            document.getElementById('typ-q').innerText = currentTypTarget.jp;
+            
+            const input = document.getElementById('typ-input');
+            input.value = '';
+            input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-slate-200 rounded-xl mb-2 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all shadow-sm";
+            input.disabled = false;
+            
+            document.getElementById('typ-feedback').innerHTML = '';
+            document.getElementById('typ-giveup-btn').classList.remove('hidden');
+        }
+
+        function initTypingListener() {
+            document.getElementById('typ-input').addEventListener('keypress', function(e) {
+                if(e.key === 'Enter') {
+                    initAudio();
+                    handleTypingEnter();
+                }
+            });
+        }
+
+        function handleTypingEnter() {
+            const input = document.getElementById('typ-input');
+            if(input.disabled || !currentTypTarget) return;
+            
+            const ans = input.value.trim().toLowerCase();
+            const feedback = document.getElementById('typ-feedback');
+            
+            if(ans === currentTypTarget.en.toLowerCase()) {
+                playSound('correct');
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-secondary bg-emerald-50 text-secondary rounded-xl mb-2 transition-all shadow-sm";
+                feedback.innerHTML = '<span class="text-secondary animate-pop flex items-center justify-start gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent!</span>';
+                document.getElementById('typ-giveup-btn').classList.add('hidden');
+                lucide.createIcons();
+                input.disabled = true;
+                
+                playAudio(currentTypTarget.en);
+                setTimeout(() => { typIndex++; renderTyping(); }, 1200);
+            } else {
+                playSound('wrong');
+                recordError(currentTypTarget.en);
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-2 focus:border-red-500 transition-all shadow-sm";
+                input.classList.add('animate-pulse');
+                setTimeout(()=> input.classList.remove('animate-pulse'), 300);
+                feedback.innerHTML = '<span class="text-red-500 flex items-center justify-start gap-1"><i data-lucide="x-circle" class="w-5 h-5"></i> Try again!</span>';
+                lucide.createIcons();
+                input.value = '';
+            }
+        }
+
+        function handleTypingGiveUp() {
+            initAudio();
+            const input = document.getElementById('typ-input');
+            if (input.disabled || !currentTypTarget) return;
+
+            playSound('wrong');
+            recordError(currentTypTarget.en);
+            
+            input.value = currentTypTarget.en; 
+            input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl transition-all shadow-sm";
+            
+            const feedback = document.getElementById('typ-feedback');
+            feedback.innerHTML = '<span class="text-red-600 flex items-center justify-start gap-1"><i data-lucide="info" class="w-5 h-5"></i> 正解はコチラ</span>';
+            document.getElementById('typ-giveup-btn').classList.add('hidden');
+            lucide.createIcons();
+            
+            input.disabled = true;
+            playAudio(currentTypTarget.en);
+            setTimeout(() => { typIndex++; renderTyping(); }, 2000); 
+        }
+
+        // --- 8. Matching (絶対に潰れない2Dアニメ) ---
+        let mFirstCard = null, mLock = false, mPairs = 0;
+        let mStartTime = 0, mTimerInterval;
+        
+        function initMatching(sourceData) {
+            clearInterval(mTimerInterval);
+            document.getElementById('match-timer').innerText = "0.0";
+            
+            const grid = document.getElementById('matching-grid');
+            grid.innerHTML = '';
+            
+            let selected = shuffle(sourceData).slice(0, 6);
+            if (selected.length < 6) {
+                const remaining = 6 - selected.length;
+                const otherWords = shuffle(wordData.filter(w => !selected.includes(w)));
+                selected = selected.concat(otherWords.slice(0, remaining));
+            }
+            
+            let cards = [];
+            selected.forEach(v => {
+                cards.push({ text: v.en, pair: v.jp });
+                cards.push({ text: v.jp, pair: v.en });
+            });
+            cards = shuffle(cards);
+            mPairs = 0;
+            
+            cards.forEach(c => {
+                let div = document.createElement('div');
+                div.className = 'card w-full aspect-[4/3] cursor-pointer'; // アスペクト比で高さを強制確保
+                div.dataset.pair = c.pair;
+                div.dataset.text = c.text;
+                
+                let fs = c.text.length > 10 ? 'text-xs md:text-sm' : 'text-sm md:text-base';
+                
+                div.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front"><i data-lucide="help-circle" class="w-6 h-6 opacity-50"></i></div>
+                        <div class="card-back ${fs}">${c.text}</div>
+                    </div>
+                `;
+                div.onclick = () => { initAudio(); flipMCard(div); };
+                grid.appendChild(div);
+            });
+            lucide.createIcons();
+            
+            mStartTime = Date.now();
+            mTimerInterval = setInterval(() => {
+                let sec = ((Date.now() - mStartTime) / 1000).toFixed(1);
+                document.getElementById('match-timer').innerText = sec;
+            }, 100);
+        }
+
+        function flipMCard(el) {
+            if(mLock || el === mFirstCard || el.classList.contains('matched') || el.classList.contains('flipped')) return;
+            el.classList.add('flipped');
+            
+            if(!mFirstCard) { mFirstCard = el; return; }
+            
+            if(mFirstCard.dataset.pair === el.dataset.text) {
+                mLock = true;
+                setTimeout(() => {
+                    playSound('match');
+                    mFirstCard.classList.add('matched');
+                    el.classList.add('matched');
+                    mFirstCard = null;
+                    mLock = false;
+                    mPairs++;
+                    if(mPairs === 6) clearMatching();
+                }, 300); 
+            } else {
+                mLock = true;
+                setTimeout(() => {
+                    mFirstCard.classList.remove('flipped');
+                    el.classList.remove('flipped');
+                    mFirstCard = null; 
+                    mLock = false;
+                }, 800);
+            }
+        }
+
+        function clearMatching() {
+            clearInterval(mTimerInterval);
+            const timeStr = ((Date.now() - mStartTime) / 1000).toFixed(1);
+            const timeNum = parseFloat(timeStr);
+            
+            matchingRanks.push({ time: timeNum, date: new Date().toLocaleDateString() });
+            matchingRanks.sort((a,b) => a.time - b.time);
+            matchingRanks = matchingRanks.slice(0, 5);
+            localStorage.setItem('wm_pro_ranks', JSON.stringify(matchingRanks));
+            
+            let rankHtml = `
+                <div class="bg-blue-50 text-primary font-bold py-2 rounded-xl mb-3 text-center text-lg">
+                    ⏱️ Time: ${timeStr}s
+                </div>
+                <h4 class="font-bold text-slate-700 mb-1 text-sm">🏆 Best Times</h4>
+                <div class="space-y-1.5">
+            `;
+            matchingRanks.forEach((r, i) => {
+                let badge = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+                let isMe = r.time === timeNum ? 'bg-yellow-100 border-yellow-300' : 'bg-slate-50 border-slate-100';
+                rankHtml += `
+                    <div class="flex justify-between items-center px-3 py-1.5 border rounded-lg ${isMe}">
+                        <span class="font-bold text-slate-700 w-6 text-sm">${badge}</span>
+                        <span class="font-bold text-primary text-base">${r.time.toFixed(1)}s</span>
+                        <span class="text-[10px] text-slate-400">${r.date}</span>
+                    </div>
+                `;
+            });
+            rankHtml += `</div>`;
+            
+            showResult("Clear!", "素早いマッチングでした！", rankHtml);
+        }
+
+        // --- 9. Versus Screen ---
+        function showVsSetup() { showModal('modal-vs'); }
+        
+        let vsData = [], p1Score = 0, p2Score = 0;
+        let isVsCpu = false, vsCpuTimer, vsLockAll = false;
+        let p1Locked = false, p2Locked = false;
+        let vsCurrentTarget = null;
+
+        function startVsMode(isCpu) {
+            closeModal('modal-vs');
+            isVsCpu = isCpu;
+            
+            document.getElementById('screen-vs').classList.remove('hidden');
+            document.getElementById('screen-vs').classList.add('flex');
+            
+            p1Score = 0; p2Score = 0;
+            updateVsUI();
+            
+            if(isVsCpu) {
+                document.getElementById('cpu-label').classList.remove('hidden');
+                document.getElementById('cpu-label').classList.add('flex');
+                document.getElementById('vs-cpu-level-display').innerText = cpuLevel;
+            } else {
+                document.getElementById('cpu-label').classList.add('hidden');
+                document.getElementById('cpu-label').classList.remove('flex');
+            }
+            
+            setTimeout(nextVsRound, 800);
+        }
+
+        function endVsEarly() {
+            clearTimeout(vsCpuTimer);
+            document.getElementById('screen-vs').classList.add('hidden');
+            document.getElementById('screen-vs').classList.remove('flex');
+            navTo('dashboard');
+        }
+
+        function updateVsUI() {
+            document.getElementById('score-p1').innerText = p1Score;
+            document.getElementById('score-p2').innerText = p2Score;
+        }
+
+        function nextVsRound() {
+            vsLockAll = false;
+            p1Locked = false;
+            p2Locked = false;
+            document.getElementById('lock-p1').classList.add('hidden');
+            document.getElementById('lock-p2').classList.add('hidden');
+            updateVsUI();
+            
+            // CPUレベルに応じた設定（枚数、遅延、ミスの確率）
+            let numChoices = 6;
+            let cpuDelay = 3000;
+            let cpuMistakeChance = 0;
+
+            if (isVsCpu) {
+                if (cpuLevel === 1) { numChoices = 6; cpuDelay = 5000; cpuMistakeChance = 0.25; }
+                else if (cpuLevel === 2) { numChoices = 6; cpuDelay = 4000; cpuMistakeChance = 0.20; }
+                else if (cpuLevel === 3) { numChoices = 8; cpuDelay = 4000; cpuMistakeChance = 0.00; }
+                else if (cpuLevel === 4) { numChoices = 8; cpuDelay = 3000; cpuMistakeChance = 0.00; }
+                else if (cpuLevel >= 5) { numChoices = 10; cpuDelay = 3000; cpuMistakeChance = 0.00; }
+            } else {
+                numChoices = 6; // 対人戦は基本6択
+            }
+            
+            vsCurrentTarget = wordData[Math.floor(Math.random() * wordData.length)];
+            document.getElementById('target-p1').innerText = vsCurrentTarget.jp;
+            document.getElementById('target-p2').innerText = vsCurrentTarget.jp;
+            
+            let choices = [vsCurrentTarget];
+            while(choices.length < numChoices) {
+                let r = wordData[Math.floor(Math.random() * wordData.length)];
+                if(!choices.includes(r)) choices.push(r);
+            }
+            choices = shuffle(choices);
+            
+            renderVsBtn('choices-p1', choices, 1, numChoices);
+            renderVsBtn('choices-p2', choices, 2, numChoices);
+            
+            if(isVsCpu) {
+                vsCpuTimer = setTimeout(() => {
+                    if(!vsLockAll && !p2Locked) {
+                        const container = document.getElementById('choices-p2');
+                        let targetBtn = null;
+                        
+                        // 確率で間違えたカードを選ぶ（お手つき）
+                        if (Math.random() < cpuMistakeChance) {
+                            const wrongBtns = Array.from(container.children).filter(b => b.innerText !== vsCurrentTarget.en);
+                            if (wrongBtns.length > 0) {
+                                targetBtn = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
+                            }
+                        }
+                        
+                        // ミスしなかった場合、または間違ったカードが取得できなかった場合は正解を選ぶ
+                        if (!targetBtn) {
+                            for(let btn of container.children) {
+                                if(btn.innerText === vsCurrentTarget.en) {
+                                    targetBtn = btn;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (targetBtn) targetBtn.click();
+                    }
+                }, cpuDelay);
+            }
+        }
+
+        function renderVsBtn(cId, choices, player, numChoices) {
+            const container = document.getElementById(cId);
+            container.innerHTML = '';
+            
+            // 選択肢の数に応じてグリッドの列数を動的に変更
+            let gridCols = 'grid-cols-3';
+            if (numChoices === 8) gridCols = 'grid-cols-2 md:grid-cols-4';
+            if (numChoices === 10) gridCols = 'grid-cols-2 md:grid-cols-5';
+            container.className = `grid gap-2 w-full max-w-xl px-2 ${gridCols}`;
+
+            choices.forEach(c => {
+                let btn = document.createElement('button');
+                
+                // カードが増えた場合は文字サイズと余白を少し調整
+                let py = numChoices >= 8 ? 'py-2 md:py-3' : 'py-3';
+                let txtSize = numChoices >= 8 ? 'text-xs md:text-sm' : 'text-sm md:text-base';
+                
+                btn.className = `bg-white border-2 border-slate-200 text-slate-800 font-bold ${py} px-1 rounded-xl ${txtSize} shadow-sm active:scale-95 transition-transform overflow-hidden break-words`;
+                btn.innerText = c.en;
+                
+                if(player === 2 && isVsCpu) {
+                    btn.disabled = true;
+                    btn.className = `bg-white border-2 border-slate-200 text-slate-800 font-bold ${py} px-1 rounded-xl ${txtSize} shadow-sm cursor-default overflow-hidden break-words`;
+                }
+                
+                btn.onclick = () => { initAudio(); handleVsClick(c, player, btn); };
+                container.appendChild(btn);
+            });
+        }
+
+        function handleVsClick(choice, player, btn) {
+            if(vsLockAll) return; 
+            if(player === 1 && p1Locked) return; 
+            if(player === 2 && p2Locked) return; 
+            
+            if(choice.en === vsCurrentTarget.en) {
+                playSound('correct');
+                vsLockAll = true; 
+                clearTimeout(vsCpuTimer);
+                
+                btn.classList.replace('bg-white', 'bg-secondary');
+                btn.classList.replace('border-slate-200', 'border-secondary');
+                btn.classList.replace('text-slate-800', 'text-white');
+                btn.classList.add('animate-pop');
+                
+                if(player === 1) p1Score++; else p2Score++;
+                updateVsUI();
+                
+                if (p1Score >= 5 || p2Score >= 5) {
+                    setTimeout(endVsMatch, 1000);
+                } else {
+                    setTimeout(nextVsRound, 1000);
+                }
+            } else {
+                playSound('wrong');
+                btn.classList.replace('bg-white', 'bg-slate-200');
+                btn.classList.replace('text-slate-800', 'text-slate-400');
+                btn.disabled = true;
+                
+                if(player === 1) {
+                    p1Locked = true;
+                    document.getElementById('lock-p1').classList.remove('hidden');
+                } else {
+                    p2Locked = true;
+                    document.getElementById('lock-p2').classList.remove('hidden');
+                }
+                
+                if(p1Locked && p2Locked) {
+                    vsLockAll = true; 
+                    clearTimeout(vsCpuTimer);
+                    setTimeout(nextVsRound, 1200);
+                }
+            }
+        }
+
+        function endVsMatch() {
+            playSound('match');
+            document.getElementById('screen-vs').classList.add('hidden');
+            document.getElementById('screen-vs').classList.remove('flex');
+            
+            let title = "", desc = "", extra = "";
+            
+            if(isVsCpu) {
+                if(p1Score >= 5) {
+                    title = "You Win!!";
+                    if(cpuLevel < 5) {
+                        cpuLevel++;
+                        localStorage.setItem('wm_pro_cpu', cpuLevel);
+                        document.getElementById('display-cpu-level').innerText = cpuLevel;
+                        desc = `CPUに勝利！ CPUのレベルが ${cpuLevel} に上がりました！`;
+                    } else {
+                        desc = "最強のCPUに勝利しました！";
+                    }
+                } else {
+                    title = "You Lose...";
+                    desc = "CPUの勝利です。次は勝てるはず！";
+                }
+            } else {
+                if(p1Score >= 5) title = "Player 1 Wins!";
+                else title = "Player 2 Wins!";
+                desc = "白熱のバトルでした！";
+            }
+            
+            extra = `
+                <div class="flex justify-center gap-6 mt-2">
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-slate-400">P1 SCORE</div>
+                        <div class="text-3xl font-extrabold text-primary">${p1Score}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-slate-400">P2 SCORE</div>
+                        <div class="text-3xl font-extrabold text-red-500">${p2Score}</div>
+                    </div>
+                </div>
+            `;
+            
+            showResult(title, desc, extra);
+        }
+    </script>
+</body>
+</html>

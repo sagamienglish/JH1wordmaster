@@ -131,7 +131,7 @@
                         <h3 class="text-base font-bold text-slate-800 mb-1">マッチング</h3>
                         <p class="text-slate-500 text-xs mb-4">ペアを素早く見つける</p>
                     </div>
-                    <button onclick="initAudio(); startMode('matching', 'all')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Play</button>
+                    <button onclick="initAudio(); openCategoryModal('matching')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Play</button>
                 </div>
 
                 <!-- タイピング -->
@@ -152,7 +152,8 @@
                         <h3 class="text-base font-bold text-slate-800 mb-1">カルタ対戦</h3>
                         <p class="text-slate-500 text-xs mb-4">1台で早押し・5点先取</p>
                     </div>
-                    <button onclick="initAudio(); showVsSetup()" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm relative z-10">Setup</button>
+                    <!-- カテゴリ選択を挟むように変更 -->
+                    <button onclick="initAudio(); openCategoryModal('vs')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm relative z-10">Setup</button>
                 </div>
             </div>
         </div>
@@ -248,7 +249,7 @@
             </div>
             
             <div id="target-p2" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center">Target</div>
-            <div id="choices-p2" class="grid grid-cols-3 gap-2 w-full max-w-xl px-2"></div>
+            <div id="choices-p2" class="grid gap-2 w-full max-w-xl px-2"></div>
             
             <div id="lock-p2" class="absolute inset-0 bg-red-100/60 hidden flex items-center justify-center z-30">
                 <span class="bg-red-600 text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg">お手つき (Wait)</span>
@@ -265,7 +266,7 @@
         <div class="vs-half vs-bottom" id="vs-player1">
             <div class="absolute top-6 right-6 bg-white/80 px-4 py-2 rounded-2xl font-bold text-primary shadow-sm z-20">P1: <span id="score-p1">0</span></div>
             <div id="target-p1" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center">Target</div>
-            <div id="choices-p1" class="grid grid-cols-3 gap-2 w-full max-w-xl px-2"></div>
+            <div id="choices-p1" class="grid gap-2 w-full max-w-xl px-2"></div>
             
             <div id="lock-p1" class="absolute inset-0 bg-blue-100/60 hidden flex items-center justify-center z-30">
                 <span class="bg-primary text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg">お手つき (Wait)</span>
@@ -360,29 +361,164 @@
             }
         }
 
-        // --- 1. Data ---
+        // --- 1. Data (151単語すべて - []は削除済み) ---
         const wordData = [
-            {en: "sport", jp: "スポーツ", cat: "My Dictionary 3"}, {en: "badminton", jp: "バドミントン", cat: "My Dictionary 3"},
-            {en: "baseball", jp: "野球", cat: "My Dictionary 3"}, {en: "cool", jp: "かっこいい", cat: "My Dictionary 3"},
-            {en: "famous", jp: "有名な", cat: "My Dictionary 3"}, {en: "friendly", jp: "親しみのある", cat: "My Dictionary 3"},
-            {en: "brave", jp: "勇敢な", cat: "My Dictionary 3"}, {en: "guitar", jp: "ギター", cat: "My Dictionary 3"},
-            {en: "trumpet", jp: "トランペット", cat: "My Dictionary 3"}, {en: "violin", jp: "バイオリン", cat: "My Dictionary 3"},
-            {en: "color", jp: "色", cat: "My Dictionary 4"}, {en: "blue", jp: "青", cat: "My Dictionary 4"},
-            {en: "brown", jp: "茶色の", cat: "My Dictionary 4"}, {en: "cook", jp: "料理する", cat: "My Dictionary 4"},
-            {en: "listen to music", jp: "音楽を聞く", cat: "My Dictionary 4"}, {en: "swim", jp: "泳ぐ", cat: "My Dictionary 4"},
-            {en: "read books", jp: "本を読む", cat: "My Dictionary 4"}, {en: "run", jp: "走る", cat: "My Dictionary 4"},
-            {en: "big", jp: "大きい", cat: "My Dictionary 5"}, {en: "small", jp: "小さい", cat: "My Dictionary 5"},
-            {en: "book", jp: "本", cat: "My Dictionary 5"}, {en: "computer", jp: "コンピュータ", cat: "My Dictionary 5"},
-            {en: "shoe", jp: "くつ", cat: "My Dictionary 5"}, {en: "hard", jp: "かたい", cat: "My Dictionary 5"},
-            {en: "soft", jp: "やわらかい", cat: "My Dictionary 5"}, {en: "eraser", jp: "消しゴム", cat: "My Dictionary 5"},
-            {en: "smile", jp: "ほほえみ", cat: "Lesson 2"}, {en: "popular", jp: "人気のある", cat: "Lesson 2"},
-            {en: "voice", jp: "声", cat: "Lesson 2"}, {en: "singer", jp: "歌手", cat: "Lesson 2"},
-            {en: "speak", jp: "話す", cat: "Lesson 2"}, {en: "teach", jp: "教える", cat: "Lesson 2"},
-            {en: "language", jp: "言語、ことば", cat: "Lesson 2"}, {en: "forward", jp: "前へ", cat: "Lesson 2"},
-            {en: "treasure", jp: "宝物", cat: "Lesson 3"}, {en: "camera", jp: "カメラ", cat: "Lesson 3"},
-            {en: "dictionary", jp: "辞書", cat: "Lesson 3"}, {en: "online", jp: "オンラインの", cat: "Lesson 3"},
-            {en: "nickname", jp: "ニックネーム", cat: "Lesson 3"}, {en: "scary", jp: "恐ろしい", cat: "Lesson 3"},
-            {en: "traditional", jp: "伝統的な", cat: "Lesson 3"}, {en: "correct", jp: "正しい", cat: "Lesson 3"}
+            // My Dictionary ③
+            {en: "sport", jp: "スポーツ", cat: "My Dictionary ③"},
+            {en: "badminton", jp: "バドミントン", cat: "My Dictionary ③"},
+            {en: "baseball", jp: "野球", cat: "My Dictionary ③"},
+            {en: "basketball", jp: "バスケットボール", cat: "My Dictionary ③"},
+            {en: "judo", jp: "柔道", cat: "My Dictionary ③"},
+            {en: "rugby", jp: "ラグビー", cat: "My Dictionary ③"},
+            {en: "skateboarding", jp: "スケートボード（に乗ること）", cat: "My Dictionary ③"},
+            {en: "skiing", jp: "スキー（ですべること）", cat: "My Dictionary ③"},
+            {en: "soccer", jp: "サッカー", cat: "My Dictionary ③"},
+            {en: "table tennis", jp: "卓球", cat: "My Dictionary ③"},
+            {en: "tennis", jp: "テニス", cat: "My Dictionary ③"},
+            {en: "volleyball", jp: "バレーボール", cat: "My Dictionary ③"},
+            {en: "wheelchair basketball", jp: "車いすバスケットボール", cat: "My Dictionary ③"},
+            {en: "cool", jp: "かっこいい", cat: "My Dictionary ③"},
+            {en: "cute", jp: "かわいい", cat: "My Dictionary ③"},
+            {en: "famous", jp: "有名な", cat: "My Dictionary ③"},
+            {en: "friendly", jp: "親しみのある", cat: "My Dictionary ③"},
+            {en: "kind", jp: "親切な・優しい", cat: "My Dictionary ③"},
+            {en: "strong", jp: "強い", cat: "My Dictionary ③"},
+            {en: "brave", jp: "勇敢な", cat: "My Dictionary ③"},
+            {en: "funny", jp: "おもしろい", cat: "My Dictionary ③"},
+            {en: "smart", jp: "かしこい", cat: "My Dictionary ③"},
+            {en: "drum", jp: "太鼓、ドラム", cat: "My Dictionary ③"},
+            {en: "guitar", jp: "ギター", cat: "My Dictionary ③"},
+            {en: "piano", jp: "ピアノ", cat: "My Dictionary ③"},
+            {en: "recorder", jp: "リコーダー", cat: "My Dictionary ③"},
+            {en: "trumpet", jp: "トランペット", cat: "My Dictionary ③"},
+            {en: "violin", jp: "バイオリン", cat: "My Dictionary ③"},
+            // My Dictionary ④
+            {en: "color", jp: "色", cat: "My Dictionary ④"},
+            {en: "black", jp: "黒（の）", cat: "My Dictionary ④"},
+            {en: "blue", jp: "青（の）", cat: "My Dictionary ④"},
+            {en: "brown", jp: "茶色の", cat: "My Dictionary ④"},
+            {en: "green", jp: "緑色（の）", cat: "My Dictionary ④"},
+            {en: "orange", jp: "オレンジ色（の）", cat: "My Dictionary ④"},
+            {en: "pink", jp: "ピンク色（の）", cat: "My Dictionary ④"},
+            {en: "purple", jp: "紫色（の）", cat: "My Dictionary ④"},
+            {en: "red", jp: "赤色（の）", cat: "My Dictionary ④"},
+            {en: "white", jp: "白色（の）", cat: "My Dictionary ④"},
+            {en: "yellow", jp: "黄色（の）", cat: "My Dictionary ④"},
+            {en: "cook", jp: "料理する", cat: "My Dictionary ④"},
+            {en: "draw pictures", jp: "絵をかく", cat: "My Dictionary ④"},
+            {en: "drink tea", jp: "茶を飲む", cat: "My Dictionary ④"},
+            {en: "go to the library", jp: "図書館に行く", cat: "My Dictionary ④"},
+            {en: "go to the park", jp: "公園に行く", cat: "My Dictionary ④"},
+            {en: "listen to music", jp: "音楽を聞く", cat: "My Dictionary ④"},
+            {en: "make cakes", jp: "ケーキを作る", cat: "My Dictionary ④"},
+            {en: "play the guitar", jp: "ギターを演奏する", cat: "My Dictionary ④"},
+            {en: "read books", jp: "本を読む", cat: "My Dictionary ④"},
+            {en: "ride a bike", jp: "自転車に乗る", cat: "My Dictionary ④"},
+            {en: "run", jp: "走る", cat: "My Dictionary ④"},
+            {en: "see a movie", jp: "映画を見る", cat: "My Dictionary ④"},
+            {en: "sing", jp: "歌う", cat: "My Dictionary ④"},
+            {en: "swim", jp: "泳ぐ", cat: "My Dictionary ④"},
+            {en: "talk with my friend", jp: "友達と話す", cat: "My Dictionary ④"},
+            {en: "use my computer", jp: "コンピュータを使う", cat: "My Dictionary ④"},
+            {en: "watch TV", jp: "テレビを見る", cat: "My Dictionary ④"},
+            {en: "write a letter", jp: "手紙を書く", cat: "My Dictionary ④"},
+            {en: "play cards", jp: "トランプをする", cat: "My Dictionary ④"},
+            {en: "jump rope", jp: "なわとびをする", cat: "My Dictionary ④"},
+            {en: "do a fun quiz", jp: "楽しいクイズをする", cat: "My Dictionary ④"},
+            // My Dictionary ⑤
+            {en: "heart", jp: "ハート型", cat: "My Dictionary ⑤"},
+            {en: "star", jp: "星型", cat: "My Dictionary ⑤"},
+            {en: "big", jp: "大きい", cat: "My Dictionary ⑤"},
+            {en: "small", jp: "小さい", cat: "My Dictionary ⑤"},
+            {en: "long", jp: "長い", cat: "My Dictionary ⑤"},
+            {en: "short", jp: "短い", cat: "My Dictionary ⑤"},
+            {en: "old", jp: "古い", cat: "My Dictionary ⑤"},
+            {en: "new", jp: "新しい", cat: "My Dictionary ⑤"},
+            {en: "hard", jp: "かたい", cat: "My Dictionary ⑤"},
+            {en: "soft", jp: "やわらかい", cat: "My Dictionary ⑤"},
+            {en: "bag", jp: "袋、カバン", cat: "My Dictionary ⑤"},
+            {en: "book", jp: "本", cat: "My Dictionary ⑤"},
+            {en: "clock", jp: "時計", cat: "My Dictionary ⑤"},
+            {en: "computer", jp: "コンピュータ", cat: "My Dictionary ⑤"},
+            {en: "hat", jp: "帽子", cat: "My Dictionary ⑤"},
+            {en: "notebook", jp: "ノート", cat: "My Dictionary ⑤"},
+            {en: "pen", jp: "ペン", cat: "My Dictionary ⑤"},
+            {en: "pencil", jp: "鉛筆", cat: "My Dictionary ⑤"},
+            {en: "pencil case", jp: "筆箱", cat: "My Dictionary ⑤"},
+            {en: "ruler", jp: "ものさし、定規", cat: "My Dictionary ⑤"},
+            {en: "scissors", jp: "はさみ", cat: "My Dictionary ⑤"},
+            {en: "watch", jp: "腕時計", cat: "My Dictionary ⑤"},
+            {en: "cap", jp: "（ふちのない）帽子", cat: "My Dictionary ⑤"},
+            {en: "cup", jp: "カップ", cat: "My Dictionary ⑤"},
+            {en: "eraser", jp: "消しゴム", cat: "My Dictionary ⑤"},
+            {en: "pants", jp: "ズボン", cat: "My Dictionary ⑤"},
+            {en: "shoe", jp: "くつ", cat: "My Dictionary ⑤"},
+            {en: "T-shirt", jp: "Tシャツ", cat: "My Dictionary ⑤"},
+            // Lesson２
+            {en: "smile", jp: "ほほえみ", cat: "Lesson２"},
+            {en: "popular", jp: "人気のある", cat: "Lesson２"},
+            {en: "her", jp: "彼女の", cat: "Lesson２"},
+            {en: "powerful", jp: "力の強い", cat: "Lesson２"},
+            {en: "voice", jp: "声", cat: "Lesson２"},
+            {en: "she", jp: "彼女は、彼女が", cat: "Lesson２"},
+            {en: "can", jp: "…することができる", cat: "Lesson２"},
+            {en: "very", jp: "とても", cat: "Lesson２"},
+            {en: "well", jp: "うまく、上手に", cat: "Lesson２"},
+            {en: "he", jp: "彼は、彼が", cat: "Lesson２"},
+            {en: "is", jp: "（…で）ある", cat: "Lesson２"},
+            {en: "singer", jp: "歌手", cat: "Lesson２"},
+            {en: "favorite", jp: "お気に入りの", cat: "Lesson２"},
+            {en: "song", jp: "歌", cat: "Lesson２"},
+            {en: "it", jp: "それは、それが", cat: "Lesson２"},
+            {en: "please", jp: "どうぞ、お願いします", cat: "Lesson２"},
+            {en: "teach", jp: "教える", cat: "Lesson２"},
+            {en: "sure", jp: "もちろん、はい", cat: "Lesson２"},
+            {en: "piece", jp: "ひとかけら、（将棋などの）駒", cat: "Lesson２"},
+            {en: "move", jp: "動く", cat: "Lesson２"},
+            {en: "space", jp: "場所、空間", cat: "Lesson２"},
+            {en: "forward", jp: "前へ", cat: "Lesson２"},
+            {en: "uncle", jp: "おじ", cat: "Lesson２"},
+            {en: "language", jp: "言語、ことば", cat: "Lesson２"},
+            {en: "his", jp: "彼の", cat: "Lesson２"},
+            {en: "speak", jp: "（ある言語を）話す", cat: "Lesson２"},
+            // Lesson３
+            {en: "treasure", jp: "宝物", cat: "Lesson３"},
+            {en: "camera", jp: "カメラ", cat: "Lesson３"},
+            {en: "open", jp: "あいている、営業中で", cat: "Lesson３"},
+            {en: "o'clock", jp: "…時", cat: "Lesson３"},
+            {en: "gate", jp: "門", cat: "Lesson３"},
+            {en: "scary", jp: "恐ろしい、怖い", cat: "Lesson３"},
+            {en: "statue", jp: "像", cat: "Lesson３"},
+            {en: "zucchini", jp: "ズッキーニ", cat: "Lesson３"},
+            {en: "Japanese-style", jp: "日本式の", cat: "Lesson３"},
+            {en: "shop", jp: "店", cat: "Lesson３"},
+            {en: "from", jp: "…から（の）", cat: "Lesson３"},
+            {en: "that", jp: "それは〔が〕、あれは〔が〕、あの", cat: "Lesson３"},
+            {en: "we", jp: "私たちは、私たちが", cat: "Lesson３"},
+            {en: "dictionary", jp: "辞書", cat: "Lesson３"},
+            {en: "blackboard", jp: "黒板", cat: "Lesson３"},
+            {en: "correct", jp: "正しい", cat: "Lesson３"},
+            {en: "almost", jp: "ほとんど", cat: "Lesson３"},
+            {en: "wrong", jp: "間違った〔ている〕", cat: "Lesson３"},
+            {en: "Indian", jp: "インドの", cat: "Lesson３"},
+            {en: "traditional", jp: "伝統的な", cat: "Lesson３"},
+            {en: "musical", jp: "音楽の", cat: "Lesson３"},
+            {en: "instrument", jp: "楽器", cat: "Lesson３"},
+            {en: "little", jp: "小さい、少し", cat: "Lesson３"},
+            {en: "online", jp: "オンラインの", cat: "Lesson３"},
+            {en: "gift", jp: "贈り物", cat: "Lesson３"},
+            {en: "aunt", jp: "おば", cat: "Lesson３"},
+            {en: "right", jp: "正しい", cat: "Lesson３"},
+            {en: "character", jp: "性格、登場人物", cat: "Lesson３"},
+            {en: "him", jp: "彼を、彼に", cat: "Lesson３"},
+            {en: "nickname", jp: "ニックネーム、あだな", cat: "Lesson３"},
+            {en: "idea", jp: "考え、意見", cat: "Lesson３"},
+            {en: "Harry", jp: "ハリー", cat: "Lesson３"},
+            {en: "Snufkin", jp: "スナフキン", cat: "Lesson３"},
+            {en: "who", jp: "だれ、だれが", cat: "Lesson３"},
+            {en: "maybe", jp: "たぶん", cat: "Lesson３"},
+            {en: "carry", jp: "運ぶ", cat: "Lesson３"},
+            {en: "room", jp: "部屋、室", cat: "Lesson３"}
         ];
         const categories = ["全て", ...new Set(wordData.map(w => w.cat))];
 
@@ -468,11 +604,15 @@
         function playAudio(text) {
             if(!window.speechSynthesis) return;
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // カッコ内の補足文字（例: [2語]）を音声から除外する処理
+            let cleanText = text.replace(/\[.*?\]/g, '').trim();
+            
+            const utterance = new SpeechSynthesisUtterance(cleanText);
             utterance.lang = 'en-US';
             utterance.rate = 0.9;
             window.speechSynthesis.speak(utterance);
-            lastUtterance = text;
+            lastUtterance = cleanText;
         }
         function replayAudio() { if(lastUtterance) playAudio(lastUtterance); }
 
@@ -532,7 +672,16 @@
         }
 
         let currentQuizData = [];
+        let pendingVsCategory = '全て';
+
         function startMode(mode, category) {
+            if (mode === 'vs') {
+                // VSの場合はカテゴリを記録して、対人/CPU選択モーダルを開く
+                pendingVsCategory = category;
+                showModal('modal-vs');
+                return;
+            }
+            
             navTo(mode);
             let source = category === "全て" ? wordData : wordData.filter(w => w.cat === category);
             currentQuizData = shuffle(source).slice(0, 5);
@@ -622,7 +771,7 @@
             });
         }
 
-        // --- 7. Typing ---
+        // --- 7. Typing & Software Keyboard ---
         let typIndex = 0;
         let currentTypTarget = null;
 
@@ -632,7 +781,7 @@
             const rows = [
                 ['q','w','e','r','t','y','u','i','o','p'],
                 ['a','s','d','f','g','h','j','k','l'],
-                ['z','x','c','v','b','n','m']
+                ['z','x','c','v','b','n','m',' ','-'] // スペースとハイフンを追加
             ];
             rows.forEach((row, rIndex) => {
                 const rowDiv = document.createElement('div');
@@ -652,8 +801,9 @@
 
                 row.forEach(char => {
                     const btn = document.createElement('button');
-                    btn.className = 'bg-white text-slate-800 rounded-lg shadow-[0_3px_0_#cbd5e1] font-bold flex-1 py-3 uppercase active:translate-y-1 active:shadow-none max-w-[45px] text-lg';
-                    btn.innerText = char;
+                    // uppercaseクラスを削除し、小文字表示に
+                    btn.className = 'bg-white text-slate-800 rounded-lg shadow-[0_3px_0_#cbd5e1] font-bold flex-1 py-3 active:translate-y-1 active:shadow-none max-w-[45px] text-lg';
+                    btn.innerText = char === ' ' ? '␣' : char;
                     btn.onclick = () => {
                         initAudio();
                         const input = document.getElementById('typ-input');
@@ -715,10 +865,13 @@
             const input = document.getElementById('typ-input');
             if(input.disabled || !currentTypTarget) return;
             
-            const ans = input.value.trim().toLowerCase();
+            // 余白除去
+            const ans = input.value.replace(/\s+/g, ' ').trim().toLowerCase();
+            const correctAns = currentTypTarget.en.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
+            
             const feedback = document.getElementById('typ-feedback');
             
-            if(ans === currentTypTarget.en.toLowerCase()) {
+            if(ans === correctAns) {
                 playSound('correct');
                 input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-secondary bg-emerald-50 text-secondary rounded-xl mb-2 transition-all shadow-sm";
                 feedback.innerHTML = '<span class="text-secondary animate-pop flex items-center justify-start gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent!</span>';
@@ -748,7 +901,8 @@
             playSound('wrong');
             recordError(currentTypTarget.en);
             
-            input.value = currentTypTarget.en; 
+            const correctAns = currentTypTarget.en.replace(/\[.*?\]/g, '').trim();
+            input.value = correctAns; 
             input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl transition-all shadow-sm";
             
             const feedback = document.getElementById('typ-feedback');
@@ -789,7 +943,7 @@
             
             cards.forEach(c => {
                 let div = document.createElement('div');
-                div.className = 'card w-full aspect-[4/3] cursor-pointer'; // アスペクト比で高さを強制確保
+                div.className = 'card w-full aspect-[4/3] cursor-pointer'; 
                 div.dataset.pair = c.pair;
                 div.dataset.text = c.text;
                 
@@ -875,8 +1029,6 @@
         }
 
         // --- 9. Versus Screen ---
-        function showVsSetup() { showModal('modal-vs'); }
-        
         let vsData = [], p1Score = 0, p2Score = 0;
         let isVsCpu = false, vsCpuTimer, vsLockAll = false;
         let p1Locked = false, p2Locked = false;
@@ -899,6 +1051,14 @@
             } else {
                 document.getElementById('cpu-label').classList.add('hidden');
                 document.getElementById('cpu-label').classList.remove('flex');
+            }
+            
+            // カテゴリによるデータ生成
+            let source = pendingVsCategory === "全て" ? wordData : wordData.filter(w => w.cat === pendingVsCategory);
+            vsData = shuffle(source);
+            if (vsData.length < 10) {
+                const otherWords = shuffle(wordData.filter(w => !vsData.includes(w)));
+                vsData = vsData.concat(otherWords);
             }
             
             setTimeout(nextVsRound, 800);
@@ -924,7 +1084,6 @@
             document.getElementById('lock-p2').classList.add('hidden');
             updateVsUI();
             
-            // CPUレベルに応じた設定（枚数、遅延、ミスの確率）
             let numChoices = 6;
             let cpuDelay = 3000;
             let cpuMistakeChance = 0;
@@ -936,16 +1095,16 @@
                 else if (cpuLevel === 4) { numChoices = 8; cpuDelay = 3000; cpuMistakeChance = 0.00; }
                 else if (cpuLevel >= 5) { numChoices = 10; cpuDelay = 3000; cpuMistakeChance = 0.00; }
             } else {
-                numChoices = 6; // 対人戦は基本6択
+                numChoices = 6; 
             }
             
-            vsCurrentTarget = wordData[Math.floor(Math.random() * wordData.length)];
+            vsCurrentTarget = vsData[Math.floor(Math.random() * vsData.length)];
             document.getElementById('target-p1').innerText = vsCurrentTarget.jp;
             document.getElementById('target-p2').innerText = vsCurrentTarget.jp;
             
             let choices = [vsCurrentTarget];
             while(choices.length < numChoices) {
-                let r = wordData[Math.floor(Math.random() * wordData.length)];
+                let r = vsData[Math.floor(Math.random() * vsData.length)];
                 if(!choices.includes(r)) choices.push(r);
             }
             choices = shuffle(choices);
@@ -953,31 +1112,35 @@
             renderVsBtn('choices-p1', choices, 1, numChoices);
             renderVsBtn('choices-p2', choices, 2, numChoices);
             
+            // CPUの動作ロジック（プログラムから直接関数を呼んで動かす）
             if(isVsCpu) {
                 vsCpuTimer = setTimeout(() => {
                     if(!vsLockAll && !p2Locked) {
                         const container = document.getElementById('choices-p2');
                         let targetBtn = null;
                         
-                        // 確率で間違えたカードを選ぶ（お手つき）
                         if (Math.random() < cpuMistakeChance) {
-                            const wrongBtns = Array.from(container.children).filter(b => b.innerText !== vsCurrentTarget.en);
+                            const wrongBtns = Array.from(container.children).filter(b => b.dataset.en !== vsCurrentTarget.en);
                             if (wrongBtns.length > 0) {
                                 targetBtn = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
                             }
                         }
                         
-                        // ミスしなかった場合、または間違ったカードが取得できなかった場合は正解を選ぶ
                         if (!targetBtn) {
                             for(let btn of container.children) {
-                                if(btn.innerText === vsCurrentTarget.en) {
+                                if(btn.dataset.en === vsCurrentTarget.en) {
                                     targetBtn = btn;
                                     break;
                                 }
                             }
                         }
                         
-                        if (targetBtn) targetBtn.click();
+                        // プログラム側からクリックの関数を直接呼び出す（無効化されていても動く）
+                        if (targetBtn) {
+                            const selectedChoice = choices.find(c => c.en === targetBtn.dataset.en);
+                            initAudio();
+                            handleVsClick(selectedChoice, 2, targetBtn);
+                        }
                     }
                 }, cpuDelay);
             }
@@ -987,7 +1150,6 @@
             const container = document.getElementById(cId);
             container.innerHTML = '';
             
-            // 選択肢の数に応じてグリッドの列数を動的に変更
             let gridCols = 'grid-cols-3';
             if (numChoices === 8) gridCols = 'grid-cols-2 md:grid-cols-4';
             if (numChoices === 10) gridCols = 'grid-cols-2 md:grid-cols-5';
@@ -995,8 +1157,8 @@
 
             choices.forEach(c => {
                 let btn = document.createElement('button');
+                btn.dataset.en = c.en; 
                 
-                // カードが増えた場合は文字サイズと余白を少し調整
                 let py = numChoices >= 8 ? 'py-2 md:py-3' : 'py-3';
                 let txtSize = numChoices >= 8 ? 'text-xs md:text-sm' : 'text-sm md:text-base';
                 
@@ -1004,7 +1166,7 @@
                 btn.innerText = c.en;
                 
                 if(player === 2 && isVsCpu) {
-                    btn.disabled = true;
+                    btn.disabled = true; // ユーザーには押せないようにする
                     btn.className = `bg-white border-2 border-slate-200 text-slate-800 font-bold ${py} px-1 rounded-xl ${txtSize} shadow-sm cursor-default overflow-hidden break-words`;
                 }
                 
@@ -1040,13 +1202,14 @@
                 playSound('wrong');
                 btn.classList.replace('bg-white', 'bg-slate-200');
                 btn.classList.replace('text-slate-800', 'text-slate-400');
-                btn.disabled = true;
                 
                 if(player === 1) {
                     p1Locked = true;
+                    btn.disabled = true;
                     document.getElementById('lock-p1').classList.remove('hidden');
                 } else {
                     p2Locked = true;
+                    // CPUボタンは元々disabledなのでクラス変更だけでOK
                     document.getElementById('lock-p2').classList.remove('hidden');
                 }
                 

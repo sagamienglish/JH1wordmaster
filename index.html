@@ -6,27 +6,94 @@
     <title>Word Master Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3B5EE8',
-                        primaryHover: '#304BD1',
-                        secondary: '#10B981',
-                        surface: '#FFFFFF',
-                        background: '#F4F7F9',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <!-- CSS変数によるテーマ管理 -->
     <style>
-        body { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+        :root {
+            --color-primary: #3B5EE8;
+            --color-primaryHover: #304BD1;
+            --color-background: #F4F7F9;
+            --color-surface: #FFFFFF;
+            --color-text-main: #1e293b; /* slate-800 */
+            --color-text-muted: #64748b; /* slate-500 */
+            --color-border: #e2e8f0; /* slate-200 */
+            --color-slate-50: #f8fafc;
+            --color-slate-100: #f1f5f9;
+        }
+
+        [data-theme="pistachio"] {
+            --color-background: #E8F5E9;
+            --color-surface: #F2FBF3;
+            --color-primary: #38A169;
+            --color-primaryHover: #2F855A;
+            --color-border: #C6F6D5;
+            --color-slate-50: #F0FFF4;
+            --color-slate-100: #E6FFFA;
+        }
         
+        [data-theme="lavender"] {
+            --color-background: #F3E8FF;
+            --color-surface: #FAF5FF;
+            --color-primary: #805AD5;
+            --color-primaryHover: #6B46C1;
+            --color-border: #E9D8FD;
+            --color-slate-50: #FAF5FF;
+            --color-slate-100: #E9D8FD;
+        }
+
+        [data-theme="sky"] {
+            --color-background: #E0F2FE;
+            --color-surface: #F0F9FF;
+            --color-primary: #0284C7;
+            --color-primaryHover: #0369A1;
+            --color-border: #BAE6FD;
+            --color-slate-50: #F0F9FF;
+            --color-slate-100: #E0F2FE;
+        }
+
+        [data-theme="apricot"] {
+            --color-background: #FFEDD5;
+            --color-surface: #FFF7ED;
+            --color-primary: #EA580C;
+            --color-primaryHover: #C2410C;
+            --color-border: #FED7AA;
+            --color-slate-50: #FFF7ED;
+            --color-slate-100: #FFEDD5;
+        }
+
+        [data-theme="cyan"] {
+            --color-background: #CCFBF1;
+            --color-surface: #F0FDFA;
+            --color-primary: #0D9488;
+            --color-primaryHover: #0F766E;
+            --color-border: #99F6E4;
+            --color-slate-50: #F0FDFA;
+            --color-slate-100: #CCFBF1;
+        }
+
+        [data-theme="cyber"] {
+            --color-background: #0E1525;
+            --color-surface: #1E293B;
+            --color-primary: #6366F1;
+            --color-primaryHover: #4F46E5;
+            --color-text-main: #F8FAFC;
+            --color-text-muted: #94A3B8;
+            --color-border: #334155;
+            --color-slate-50: #0f172a;
+            --color-slate-100: #1e293b;
+        }
+
+        body { touch-action: manipulation; user-select: none; -webkit-user-select: none; background-color: var(--color-background); color: var(--color-text-main); }
+        .text-slate-800, .text-slate-700 { color: var(--color-text-main) !important; }
+        .text-slate-600, .text-slate-500, .text-slate-400 { color: var(--color-text-muted) !important; }
+        .bg-white, .bg-surface { background-color: var(--color-surface) !important; }
+        .bg-slate-50 { background-color: var(--color-slate-50) !important; }
+        .bg-slate-100 { background-color: var(--color-slate-100) !important; }
+        .border-slate-100, .border-slate-200 { border-color: var(--color-border) !important; }
+        
+        input[type="text"] { background-color: var(--color-surface) !important; color: var(--color-text-main) !important; border-color: var(--color-border) !important; }
+
         /* Matching Card Stable 2D Crossfade Animation */
         .card-inner { position: relative; width: 100%; height: 100%; }
         .card-front, .card-back { 
@@ -35,52 +102,69 @@
             border-radius: 0.75rem; padding: 0.5rem; text-align: center; word-break: break-word; 
             transition: all 0.25s ease-out;
         }
-        .card-front { background-color: #3B5EE8; color: white; font-size: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 2; transform: scale(1); opacity: 1; }
-        .card-back { background-color: white; color: #1F2937; border: 2px solid #3B5EE8; font-weight: bold; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); z-index: 1; transform: scale(0.9); opacity: 0; }
-        
+        .card-front { background-color: var(--color-primary); color: white; font-size: 1.5rem; z-index: 2; transform: scale(1); opacity: 1; }
+        .card-back { background-color: var(--color-surface); color: var(--color-text-main); border: 2px solid var(--color-primary); font-weight: bold; z-index: 1; transform: scale(0.9); opacity: 0; }
         .card.flipped .card-front { transform: scale(1.1); opacity: 0; z-index: 1; pointer-events: none; }
         .card.flipped .card-back { transform: scale(1); opacity: 1; z-index: 2; }
         .card.matched { opacity: 0; pointer-events: none; transition: opacity 0.3s 0.5s; }
 
         /* VS Screen */
-        #screen-vs { position: fixed; inset: 0; z-index: 50; background: white; flex-direction: column; overflow: hidden; }
+        #screen-vs { position: fixed; inset: 0; z-index: 50; background-color: var(--color-surface); flex-direction: column; overflow: hidden; }
         .vs-half { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
-        .vs-top { transform: rotate(180deg); background-color: #FEE2E2; }
-        .vs-bottom { background-color: #E0E7FF; }
-        .vs-divider { height: 8px; background-color: #1F2937; width: 100%; z-index: 10; position: relative; }
+        .vs-top { transform: rotate(180deg); background-color: rgba(239, 68, 68, 0.1); }
+        .vs-bottom { background-color: rgba(59, 94, 232, 0.1); }
+        .vs-divider { height: 8px; background-color: var(--color-text-main); width: 100%; z-index: 40; position: relative; pointer-events: none; }
+        .vs-close-btn { pointer-events: auto; }
         
+        /* Sortable */
+        .sortable-ghost { opacity: 0.2; background-color: var(--color-border); }
+        .sortable-drag { cursor: grabbing !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+
         /* Animations */
         @keyframes pop { 0% { transform: scale(0.95); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .animate-pop { animation: pop 0.3s ease-out; }
 
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 10px; }
     </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        primaryHover: 'var(--color-primaryHover)',
+                        secondary: '#10B981',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-background text-slate-800 h-screen w-screen overflow-hidden font-sans flex">
+<body class="font-sans flex">
 
     <!-- Desktop Sidebar -->
     <aside class="hidden md:flex w-64 flex-col bg-surface border-r border-slate-200 h-full p-6 shadow-sm z-20 shrink-0">
         <div class="text-2xl font-extrabold text-primary mb-10 flex items-center gap-3">
-            <div class="bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center shadow-md">W</div>
+            <div class="bg-primary text-white rounded-xl w-10 h-10 flex items-center justify-center shadow-md">
+                <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+            </div>
             Word Master
         </div>
         <nav class="space-y-2 flex-1">
-            <button onclick="navTo('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-4 p-4 rounded-2xl bg-blue-50 text-primary font-bold transition-colors">
+            <button onclick="navTo('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-4 p-4 rounded-xl bg-blue-50 text-primary font-bold transition-colors border border-transparent">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
             </button>
-            <button onclick="navTo('vocabulary')" id="nav-vocabulary" class="w-full flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-slate-50 font-bold transition-colors">
+            <button onclick="navTo('vocabulary')" id="nav-vocabulary" class="w-full flex items-center gap-4 p-4 rounded-xl text-slate-500 hover:bg-slate-50 font-bold transition-colors border border-transparent">
                 <i data-lucide="library" class="w-5 h-5"></i> 語彙リスト
             </button>
         </nav>
-        <div class="mt-auto">
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <div class="text-xs text-slate-400 font-bold mb-1">CPU LEVEL</div>
-                <div class="text-lg font-bold text-slate-700 flex items-center gap-2">
-                    <i data-lucide="bot" class="w-5 h-5 text-primary"></i> Lv. <span id="display-cpu-level">1</span>
-                </div>
-            </div>
+        
+        <div class="mt-auto pt-4 border-t border-slate-100">
+            <button onclick="showModal('modal-theme')" class="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-slate-200 text-slate-500 hover:text-primary transition-colors font-bold text-sm mb-4">
+                <i data-lucide="palette" class="w-4 h-4"></i> テーマ変更
+            </button>
         </div>
     </aside>
 
@@ -88,100 +172,126 @@
     <main class="flex-1 relative overflow-y-auto overflow-x-hidden pb-20 md:pb-0">
         
         <!-- ================= 1. Dashboard Screen ================= -->
-        <div id="screen-dashboard" class="screen flex flex-col p-6 md:p-8 max-w-6xl mx-auto min-h-full">
-            <h1 class="text-3xl font-extrabold text-slate-800 mb-1 tracking-tight">Welcome back!</h1>
-            <p class="text-slate-500 font-medium mb-6">今日も少しずつ語彙力を鍛えよう</p>
-
+        <div id="screen-dashboard" class="screen flex flex-col p-6 md:p-8 max-w-6xl mx-auto min-h-full pt-8">
+            
             <!-- Stats -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-                    <div class="bg-orange-100 text-orange-500 p-3 rounded-xl"><i data-lucide="flame" class="w-6 h-6"></i></div>
-                    <div>
-                        <div class="text-xs text-slate-400 font-bold mb-1">連続ログイン</div>
-                        <div class="text-2xl font-extrabold text-slate-700"><span id="days-count">1</span> <span class="text-sm font-normal text-slate-500">日</span></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-surface rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-1 text-slate-400">
+                        <i data-lucide="calendar" class="w-4 h-4"></i><span class="text-xs font-bold">連続ログイン</span>
                     </div>
+                    <div class="text-2xl font-extrabold text-slate-700"><span id="days-count">1</span> <span class="text-sm font-normal text-slate-500">日</span></div>
                 </div>
-                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex items-center gap-4">
-                    <div class="bg-blue-100 text-primary p-3 rounded-xl"><i data-lucide="clock" class="w-6 h-6"></i></div>
-                    <div>
-                        <div class="text-xs text-slate-400 font-bold mb-1">総学習時間</div>
-                        <div class="text-2xl font-extrabold text-slate-700"><span id="time-count">0分</span></div>
+                <div class="bg-surface rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-1 text-slate-400">
+                        <i data-lucide="clock" class="w-4 h-4"></i><span class="text-xs font-bold">総学習時間</span>
                     </div>
+                    <div class="text-2xl font-extrabold text-slate-700"><span id="time-count">0分</span></div>
+                </div>
+                <!-- Stamina -->
+                <div class="bg-surface rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-center relative overflow-hidden">
+                    <div class="flex items-center gap-2 mb-1 text-yellow-500">
+                        <i data-lucide="zap" class="w-4 h-4"></i><span class="text-xs font-bold">スタミナ</span>
+                    </div>
+                    <div class="text-2xl font-extrabold text-slate-700 flex items-baseline gap-1">
+                        <span id="stamina-count">10</span><span class="text-sm text-slate-400">/10</span>
+                    </div>
+                    <div id="stamina-timer" class="absolute top-4 right-4 text-[10px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded">MAX</div>
+                </div>
+                <!-- EXP -->
+                <div class="bg-surface rounded-xl p-4 shadow-sm border border-slate-100 flex flex-col justify-center">
+                    <div class="flex items-center gap-2 mb-1 text-primary">
+                        <i data-lucide="star" class="w-4 h-4"></i><span class="text-xs font-bold">経験値 (EXP)</span>
+                    </div>
+                    <div class="text-2xl font-extrabold text-primary"><span id="exp-count">0</span></div>
                 </div>
             </div>
-
-            <h2 class="text-lg font-bold text-slate-800 mb-3">Jump back in</h2>
             
-            <!-- Mode Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- 4択 -->
-                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div>
-                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i></div>
-                        <h3 class="text-base font-bold text-slate-800 mb-1">４択クイズ</h3>
-                        <p class="text-slate-500 text-xs mb-4">意味を選ぶクイズ（全5問）</p>
+            <h2 class="text-lg font-bold text-slate-800 mb-4">Choose a Mode</h2>
+            
+            <!-- Mode Cards Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-5">
+                
+                <div onclick="initAudio(); openSetupModal('4choice')" class="bg-surface rounded-xl p-5 shadow-sm border border-slate-200 hover:border-primary transition-colors cursor-pointer flex flex-col relative group">
+                    <div class="absolute top-3 right-3 text-primary text-[10px] font-bold px-2 py-1 flex items-center gap-2">
+                        <div class="flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> <span id="dash-score-4choice">0</span></div>
                     </div>
-                    <button onclick="initAudio(); openCategoryModal('4choice')" class="w-full bg-primary hover:bg-primaryHover text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Start</button>
+                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i data-lucide="mouse-pointer-click" class="w-5 h-5"></i></div>
+                    <h3 class="text-base font-bold text-slate-800 mb-1">４択クイズ</h3>
+                    <p class="text-slate-500 text-xs">意味を選ぶクイズ（全5問）</p>
                 </div>
                 
-                <!-- マッチング -->
-                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div>
-                        <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="layout-grid" class="w-5 h-5"></i></div>
-                        <h3 class="text-base font-bold text-slate-800 mb-1">マッチング</h3>
-                        <p class="text-slate-500 text-xs mb-4">ペアを素早く見つける</p>
+                <div onclick="initAudio(); openSetupModal('typing')" class="bg-surface rounded-xl p-5 shadow-sm border border-slate-200 hover:border-primary transition-colors cursor-pointer flex flex-col relative group">
+                    <div class="absolute top-3 right-3 text-primary text-[10px] font-bold px-2 py-1 flex items-center gap-2">
+                        <div class="flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> <span id="dash-score-typing">0</span></div>
                     </div>
-                    <button onclick="initAudio(); openCategoryModal('matching')" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Play</button>
+                    <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i data-lucide="keyboard" class="w-5 h-5"></i></div>
+                    <h3 class="text-base font-bold text-slate-800 mb-1">タイピング</h3>
+                    <p class="text-slate-500 text-xs">正しいスペルを入力（全5問）</p>
                 </div>
 
-                <!-- タイピング -->
-                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div>
-                        <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="keyboard" class="w-5 h-5"></i></div>
-                        <h3 class="text-base font-bold text-slate-800 mb-1">タイピング</h3>
-                        <p class="text-slate-500 text-xs mb-4">正しいスペルを入力（全5問）</p>
+                <div onclick="initAudio(); openSetupModal('listening')" class="bg-surface rounded-xl p-5 shadow-sm border border-slate-200 hover:border-primary transition-colors cursor-pointer flex flex-col relative group">
+                    <div class="absolute top-3 right-3 text-primary text-[10px] font-bold px-2 py-1 flex items-center gap-2">
+                        <div class="flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> <span id="dash-score-listening">0</span></div>
                     </div>
-                    <button onclick="initAudio(); openCategoryModal('typing')" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm">Start</button>
+                    <div class="w-10 h-10 bg-cyan-50 text-cyan-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i data-lucide="headphones" class="w-5 h-5"></i></div>
+                    <h3 class="text-base font-bold text-slate-800 mb-1">リスニング</h3>
+                    <p class="text-slate-500 text-xs">音声3連続を聞き取って選ぶ</p>
                 </div>
 
-                <!-- カルタ対戦 -->
-                <div class="bg-surface rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between relative overflow-hidden hover:shadow-md transition-shadow">
+                <div onclick="initAudio(); openSetupModal('matching')" class="bg-surface rounded-xl p-5 shadow-sm border border-slate-200 hover:border-primary transition-colors cursor-pointer flex flex-col relative group">
+                    <div class="absolute top-3 right-3 text-primary text-[10px] font-bold flex items-center gap-2">
+                        <div class="flex items-center gap-1"><i data-lucide="timer" class="w-3 h-3"></i> <span id="dash-score-matching">--</span></div>
+                        <div class="flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> <span id="dash-count-matching">0</span></div>
+                    </div>
+                    <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i data-lucide="layout-grid" class="w-5 h-5"></i></div>
+                    <h3 class="text-base font-bold text-slate-800 mb-1">マッチング</h3>
+                    <p class="text-slate-500 text-xs">ペアを素早く見つける</p>
+                </div>
+
+                <div onclick="initAudio(); openSetupModal('timetrial')" class="bg-surface rounded-xl p-5 shadow-sm border border-slate-200 hover:border-primary transition-colors cursor-pointer flex flex-col relative group">
+                    <div class="absolute top-3 right-3 text-primary text-[10px] font-bold flex items-center gap-2">
+                        <div class="flex items-center gap-1"><i data-lucide="timer" class="w-3 h-3"></i> <span id="dash-score-timetrial">--</span></div>
+                        <div class="flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> <span id="dash-count-timetrial">0</span></div>
+                    </div>
+                    <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i data-lucide="list-ordered" class="w-5 h-5"></i></div>
+                    <h3 class="text-base font-bold text-slate-800 mb-1">タイムトライアル</h3>
+                    <p class="text-slate-500 text-xs">10単語を一致させる</p>
+                </div>
+
+                <div onclick="initAudio(); openSetupModal('vs')" class="bg-surface rounded-xl p-5 shadow-sm border border-slate-200 hover:border-primary transition-colors cursor-pointer flex flex-col relative group overflow-hidden">
                     <div class="absolute -right-4 -top-4 w-16 h-16 bg-red-50 rounded-full opacity-50 pointer-events-none"></div>
-                    <div>
-                        <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-3"><i data-lucide="swords" class="w-5 h-5"></i></div>
-                        <h3 class="text-base font-bold text-slate-800 mb-1">カルタ対戦</h3>
-                        <p class="text-slate-500 text-xs mb-4">1台で早押し・5点先取</p>
+                    <div class="absolute top-3 right-3 text-red-500 text-[10px] font-bold flex items-center gap-2 z-10">
+                        <div class="flex items-center gap-1"><i data-lucide="bot" class="w-3 h-3"></i> Lv.<span id="dash-score-vs">1</span></div>
+                        <div class="flex items-center gap-1"><i data-lucide="play" class="w-3 h-3"></i> <span id="dash-count-vs">0</span></div>
                     </div>
-                    <!-- カテゴリ選択を挟むように変更 -->
-                    <button onclick="initAudio(); openCategoryModal('vs')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2.5 rounded-xl transition-colors text-sm relative z-10">Setup</button>
+                    <div class="w-10 h-10 bg-red-50 text-red-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform relative z-10"><i data-lucide="swords" class="w-5 h-5"></i></div>
+                    <h3 class="text-base font-bold text-slate-800 mb-1 relative z-10">カルタ対戦</h3>
+                    <p class="text-slate-500 text-xs relative z-10">1台で早押し・5点先取</p>
                 </div>
             </div>
         </div>
 
         <!-- ================= 2. Vocabulary List Screen ================= -->
         <div id="screen-vocabulary" class="screen hidden flex-col p-6 md:p-8 max-w-6xl mx-auto min-h-full">
-            <h2 class="text-2xl font-extrabold text-slate-800 mb-1">語彙リスト</h2>
-            <p class="text-slate-500 text-sm mb-6 font-medium">🔥マークは過去に間違えた苦手な単語です。</p>
-            <div id="vocab-container" class="w-full">
-                <!-- JavaScriptで生成 -->
-            </div>
+            <h2 class="text-2xl font-extrabold text-slate-800 mb-2">語彙リスト</h2>
+            <p class="text-slate-500 text-sm mb-6 font-medium flex items-center gap-1"><i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>マークは過去に間違えた苦手な単語です。</p>
+            <div id="vocab-container" class="w-full"></div>
         </div>
 
         <!-- ================= 3. 4-Choice Screen ================= -->
         <div id="screen-4choice" class="screen hidden flex-col p-4 md:p-8 max-w-3xl mx-auto min-h-full">
             <div class="flex justify-between items-center mb-6">
                 <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
-                <div class="bg-indigo-100 text-indigo-700 font-bold px-4 py-1.5 rounded-full text-sm">Q <span id="qc-current">1</span> / 5</div>
+                <div class="bg-slate-100 text-slate-600 font-bold px-4 py-1.5 rounded-full text-sm flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i> Q <span id="qc-current">1</span> / 5
+                </div>
             </div>
             
             <div class="flex-grow flex flex-col items-center justify-center w-full">
-                <button id="qc-audio-btn" onclick="replayAudio()" class="mb-4 text-primary bg-blue-50 p-3 rounded-full hover:bg-blue-100 transition-colors hidden"><i data-lucide="volume-2" class="w-6 h-6"></i></button>
-                
-                <div id="qc-text" class="text-3xl md:text-5xl font-extrabold text-slate-800 mb-10 text-center w-full px-2">問題</div>
-                
-                <div id="qc-choices" class="w-full grid grid-cols-1 md:grid-cols-2 gap-3 px-2">
-                    <!-- 選択肢 -->
-                </div>
+                <button id="qc-audio-btn" onclick="replayAudio()" class="mb-6 text-primary bg-slate-50 p-4 rounded-full hover:bg-slate-100 transition-colors hidden border border-slate-200 hover:border-primary"><i data-lucide="volume-2" class="w-8 h-8"></i></button>
+                <div id="qc-text" class="text-3xl md:text-5xl font-extrabold text-slate-800 mb-12 text-center w-full px-2"></div>
+                <div id="qc-choices" class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 px-2"></div>
             </div>
         </div>
 
@@ -189,26 +299,24 @@
         <div id="screen-typing" class="screen hidden flex-col p-4 md:p-8 max-w-3xl mx-auto min-h-full">
             <div class="flex justify-between items-center mb-4">
                 <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
-                <div class="bg-amber-100 text-amber-700 font-bold px-4 py-1.5 rounded-full text-sm">Q <span id="typ-current">1</span> / 5</div>
+                <div class="bg-slate-100 text-slate-600 font-bold px-4 py-1.5 rounded-full text-sm">Q <span id="typ-current">1</span> / 5</div>
             </div>
             
             <div class="flex-grow flex flex-col items-center justify-start pt-4 w-full">
-                <div class="text-slate-500 mb-1 font-bold uppercase tracking-wider text-xs">Translate to English</div>
-                <div id="typ-q" class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-6 text-center">問題</div>
+                <div class="text-slate-400 mb-2 font-bold uppercase tracking-wider text-xs">Translate to English</div>
+                <div id="typ-q" class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-8 text-center"></div>
                 
-                <input type="text" id="typ-input" placeholder="Type here" autocomplete="off" spellcheck="false"
-                    class="w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-slate-200 rounded-xl mb-2 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all shadow-sm">
+                <input type="text" id="typ-input" placeholder="type here..." autocomplete="off" spellcheck="false"
+                    class="w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-slate-200 rounded-xl mb-3 focus:border-primary outline-none transition-colors bg-surface text-slate-800">
                 
-                <!-- ギブアップボタン＆フィードバック -->
-                <div class="w-full max-w-md flex justify-between items-center mb-2 px-2">
-                    <div id="typ-feedback" class="h-8 text-lg font-bold flex-1 text-left"></div>
-                    <button id="typ-giveup-btn" onclick="handleTypingGiveUp()" class="text-sm font-bold text-slate-400 hover:text-red-500 transition-colors bg-slate-100 px-3 py-1 rounded-full">わからない?</button>
+                <div class="w-full max-w-md flex justify-between items-center mb-4 px-2">
+                    <div id="typ-feedback" class="h-8 text-lg font-bold flex-1 text-left flex items-center"></div>
+                    <button id="typ-hint-btn" onclick="handleTypingHint()" class="text-sm font-bold text-slate-500 hover:text-primary transition-colors bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                        <i data-lucide="lightbulb" class="w-4 h-4"></i> ヒント
+                    </button>
                 </div>
 
-                <!-- ソフトウェアキーボード -->
-                <div id="software-keyboard" class="w-full max-w-lg mx-auto bg-slate-100 p-2 rounded-xl mt-2 select-none">
-                    <!-- JSでキーを生成 -->
-                </div>
+                <div id="software-keyboard" class="w-full max-w-lg mx-auto bg-slate-50 p-3 rounded-xl mt-2 select-none border border-slate-100"></div>
             </div>
         </div>
 
@@ -216,337 +324,381 @@
         <div id="screen-matching" class="screen hidden flex-col p-4 md:p-8 max-w-4xl mx-auto min-h-full">
             <div class="flex justify-between items-center mb-4">
                 <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
-                <div class="text-slate-500 font-bold flex items-center gap-2"><i data-lucide="timer" class="w-5 h-5"></i> <span id="match-timer">0.0</span>s</div>
+                <div class="text-slate-600 font-bold flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-slate-200"><i data-lucide="timer" class="w-4 h-4"></i> <span id="match-timer">0.0</span>s</div>
             </div>
             
-            <div class="flex-grow flex flex-col items-center justify-center w-full px-2 pb-8">
-                <!-- aspect-[4/3] で高さを幅に連動させて潰れを完全に防止 -->
-                <div id="matching-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-2xl mx-auto">
-                    <!-- カード -->
+            <div class="flex-grow flex items-center justify-center w-full px-2 pb-8">
+                <!-- 1P -->
+                <div id="matching-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-2xl mx-auto"></div>
+                <!-- 2P -->
+                <div id="matching-vs-container" class="hidden w-full flex-row gap-4 h-full max-h-[70vh]">
+                    <div class="flex-1 flex flex-col bg-slate-50 p-4 rounded-2xl border border-slate-200 relative">
+                        <div class="text-center font-bold text-primary mb-3"><i data-lucide="user" class="inline w-4 h-4"></i> Player 1</div>
+                        <div id="mvs-grid-p1" class="grid grid-cols-2 gap-2 flex-grow content-center"></div>
+                        <div id="mvs-win-p1" class="hidden absolute inset-0 bg-surface/90 flex flex-col items-center justify-center z-10 rounded-2xl backdrop-blur-sm">
+                            <i data-lucide="check-circle" class="w-12 h-12 text-primary mb-2"></i>
+                            <span class="text-2xl font-extrabold text-slate-800">WIN!</span>
+                        </div>
+                    </div>
+                    <div class="w-1 bg-slate-200 rounded-full"></div>
+                    <div class="flex-1 flex flex-col bg-slate-50 p-4 rounded-2xl border border-slate-200 relative">
+                        <div class="text-center font-bold text-red-500 mb-3"><i data-lucide="user" class="inline w-4 h-4"></i> Player 2</div>
+                        <div id="mvs-grid-p2" class="grid grid-cols-2 gap-2 flex-grow content-center"></div>
+                        <div id="mvs-win-p2" class="hidden absolute inset-0 bg-surface/90 flex flex-col items-center justify-center z-10 rounded-2xl backdrop-blur-sm">
+                            <i data-lucide="check-circle" class="w-12 h-12 text-red-500 mb-2"></i>
+                            <span class="text-2xl font-extrabold text-slate-800">WIN!</span>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ================= 6. Time Trial Screen ================= -->
+        <div id="screen-timetrial" class="screen hidden flex-col p-4 md:p-8 max-w-5xl mx-auto min-h-full">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="flex gap-3">
+                    <div class="text-slate-600 font-bold flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg text-sm"><i data-lucide="timer" class="w-4 h-4"></i> <span id="tt-timer">0.0</span>s</div>
+                    <button onclick="checkTimeTrial()" class="bg-primary hover:bg-primaryHover text-white font-bold px-5 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-1 shadow-sm"><i data-lucide="check" class="w-4 h-4"></i> 判定</button>
+                </div>
+            </div>
+            
+            <div class="flex-grow flex gap-3 w-full h-full pb-8">
+                <!-- 左：日本語 -->
+                <div class="flex-1 flex flex-col gap-2" id="tt-jp-list"></div>
+                <!-- 中：ドロップゾーン（独立10スロット） -->
+                <div class="flex-1 flex flex-col gap-2 p-2 bg-slate-50 rounded-xl border-2 border-slate-200 min-h-[300px]" id="tt-drop-zone"></div>
+                <!-- 右：英語リスト -->
+                <div class="flex-1 flex flex-col gap-2 p-2 bg-surface rounded-xl border border-slate-200 min-h-[300px]" id="tt-en-list"></div>
+            </div>
+        </div>
+
+        <!-- ================= 7. Listening Screen ================= -->
+        <div id="screen-listening" class="screen hidden flex-col p-4 md:p-8 max-w-3xl mx-auto min-h-full">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="navTo('dashboard')" class="text-slate-400 hover:text-slate-600 p-2"><i data-lucide="x" class="w-6 h-6"></i></button>
+                <div class="bg-slate-100 text-slate-600 font-bold px-4 py-1.5 rounded-lg text-sm flex items-center gap-2">
+                    <i data-lucide="headphones" class="w-4 h-4"></i> Q <span id="list-current">1</span> / 3
+                </div>
+            </div>
+            
+            <div class="flex-grow flex flex-col items-center justify-start pt-8 w-full">
+                <!-- スピーカーアニメーション -->
+                <div class="relative w-24 h-24 mb-10 flex items-center justify-center">
+                    <div id="list-ripple" class="absolute inset-0 bg-blue-100 rounded-full opacity-0 scale-50 transition-all duration-500"></div>
+                    <button onclick="playListeningAudio()" class="relative z-10 bg-primary text-white p-6 rounded-full shadow-lg hover:bg-primaryHover transition-transform active:scale-95">
+                        <i data-lucide="volume-2" class="w-8 h-8"></i>
+                    </button>
+                </div>
+                
+                <p class="text-slate-500 font-bold text-sm mb-4">聞こえた順番に３つ選ぼう</p>
+                
+                <!-- スロット -->
+                <div id="list-slots" class="flex gap-3 mb-10 w-full justify-center">
+                    <div class="w-1/3 max-w-[120px] h-14 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center text-sm font-bold text-primary bg-slate-50 transition-all"></div>
+                    <div class="w-1/3 max-w-[120px] h-14 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center text-sm font-bold text-primary bg-slate-50 transition-all"></div>
+                    <div class="w-1/3 max-w-[120px] h-14 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center text-sm font-bold text-primary bg-slate-50 transition-all"></div>
+                </div>
+
+                <!-- 選択肢 -->
+                <div id="list-choices" class="grid grid-cols-2 gap-3 w-full px-2"></div>
             </div>
         </div>
 
     </main>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="md:hidden absolute bottom-0 w-full bg-surface border-t border-slate-200 flex justify-around p-2 z-30 pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+    <nav class="md:hidden absolute bottom-0 w-full bg-surface border-t border-slate-200 flex justify-around p-2 z-30 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
         <button onclick="navTo('dashboard')" id="mob-dashboard" class="flex flex-col items-center p-2 text-primary">
             <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Home</span>
         </button>
         <button onclick="navTo('vocabulary')" id="mob-vocabulary" class="flex flex-col items-center p-2 text-slate-400">
             <i data-lucide="library" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Words</span>
         </button>
+        <button onclick="showModal('modal-theme')" class="flex flex-col items-center p-2 text-slate-400">
+            <i data-lucide="palette" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Theme</span>
+        </button>
     </nav>
 
-    <!-- ================= 6. VS Screen (Absolute Full Screen) ================= -->
-    <div id="screen-vs" class="hidden">
-        <!-- P2 (Top) -->
+    <!-- ================= 8. VS Screen (Karuta) ================= -->
+    <div id="screen-vs" class="hidden screen">
+        <!-- 確実に押せるように最前面＆独立して配置した終了ボタン -->
+        <button onclick="endVsEarly()" class="vs-close-btn absolute left-4 top-1/2 -translate-y-1/2 bg-slate-800 text-white p-3 rounded-full hover:bg-slate-700 z-[100] transition-colors shadow-xl cursor-pointer border-2 border-slate-600 flex items-center justify-center"><i data-lucide="x" class="w-6 h-6"></i></button>
+
         <div class="vs-half vs-top" id="vs-player2">
-            <div class="absolute top-6 right-6 bg-white/80 px-4 py-2 rounded-2xl font-bold text-red-600 shadow-sm z-20">P2: <span id="score-p2">0</span></div>
-            <div id="cpu-label" class="absolute top-6 left-6 bg-slate-800 text-white px-3 py-1.5 rounded-xl font-bold shadow-sm hidden items-center gap-1.5 z-20 text-sm">
+            <div class="absolute top-6 right-6 bg-surface/90 px-4 py-2 rounded-lg font-bold text-red-600 shadow-sm z-20 flex items-center gap-2 border border-red-100"><i data-lucide="user" class="w-4 h-4"></i> <span id="score-p2">0</span></div>
+            <div id="cpu-label" class="absolute top-6 left-6 bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold shadow-sm hidden items-center gap-1.5 z-20 text-sm">
                 <i data-lucide="bot" class="w-4 h-4"></i> Lv.<span id="vs-cpu-level-display">1</span>
             </div>
-            
-            <div id="target-p2" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center">Target</div>
+            <div id="target-p2" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center px-4">Target</div>
             <div id="choices-p2" class="grid gap-2 w-full max-w-xl px-2"></div>
-            
-            <div id="lock-p2" class="absolute inset-0 bg-red-100/60 hidden flex items-center justify-center z-30">
-                <span class="bg-red-600 text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg">お手つき (Wait)</span>
+            <div id="lock-p2" class="absolute inset-0 bg-red-50/80 hidden flex items-center justify-center z-30 backdrop-blur-sm">
+                <div class="flex flex-col items-center text-red-600"><i data-lucide="slash" class="w-12 h-12 mb-2"></i><span class="font-bold text-xl">WAIT</span></div>
             </div>
         </div>
         
-        <!-- Divider -->
         <div class="vs-divider flex items-center justify-center">
-            <div id="vs-round" class="absolute bg-slate-800 text-white font-bold px-6 py-1.5 rounded-full text-sm shadow-md">5 Point Match</div>
-            <button onclick="endVsEarly()" class="absolute left-4 bg-slate-700 text-white p-2 rounded-full shadow-lg hover:bg-slate-600 z-20"><i data-lucide="x" class="w-4 h-4"></i></button>
+            <div id="vs-round" class="absolute bg-slate-800 text-white font-bold px-6 py-1.5 rounded-full text-sm shadow-sm flex items-center gap-2"><i data-lucide="flag" class="w-4 h-4"></i> 5 Point Match</div>
         </div>
         
-        <!-- P1 (Bottom) -->
         <div class="vs-half vs-bottom" id="vs-player1">
-            <div class="absolute top-6 right-6 bg-white/80 px-4 py-2 rounded-2xl font-bold text-primary shadow-sm z-20">P1: <span id="score-p1">0</span></div>
-            <div id="target-p1" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center">Target</div>
+            <div class="absolute top-6 right-6 bg-surface/90 px-4 py-2 rounded-lg font-bold text-primary shadow-sm z-20 flex items-center gap-2 border border-slate-200"><i data-lucide="user" class="w-4 h-4"></i> <span id="score-p1">0</span></div>
+            <div id="target-p1" class="text-2xl md:text-4xl font-extrabold text-slate-800 mb-6 mt-12 text-center px-4">Target</div>
             <div id="choices-p1" class="grid gap-2 w-full max-w-xl px-2"></div>
-            
-            <div id="lock-p1" class="absolute inset-0 bg-blue-100/60 hidden flex items-center justify-center z-30">
-                <span class="bg-primary text-white font-bold py-2 px-6 rounded-full text-xl shadow-lg">お手つき (Wait)</span>
+            <div id="lock-p1" class="absolute inset-0 bg-slate-100/80 hidden flex items-center justify-center z-30 backdrop-blur-sm">
+                <div class="flex flex-col items-center text-primary"><i data-lucide="slash" class="w-12 h-12 mb-2"></i><span class="font-bold text-xl">WAIT</span></div>
             </div>
         </div>
     </div>
 
     <!-- ================= Modals ================= -->
-    <div id="modal-category" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-surface rounded-3xl p-6 w-full max-w-sm shadow-2xl transform transition-all animate-pop">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-extrabold text-slate-800">出題範囲を選ぶ</h2>
-                <button onclick="closeModal('modal-category')" class="text-slate-400 hover:bg-slate-100 p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+    <div id="modal-setup" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-surface rounded-2xl p-6 w-full max-w-sm shadow-xl transform transition-all animate-pop border border-slate-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="setup-title" class="text-xl font-extrabold text-slate-800 flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5 text-primary"></i> 設定</h2>
+                <button onclick="closeModal('modal-setup')" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <div id="category-list" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>
+            
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">出題範囲</label>
+                <div id="setup-category-buttons" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <div id="setup-options-container" class="mb-6"></div>
+
+            <button onclick="confirmSetup()" class="w-full bg-primary hover:bg-primaryHover text-white font-bold py-3 rounded-xl transition-colors text-sm flex justify-center items-center gap-2"><i data-lucide="play" class="w-4 h-4"></i> スタート (⚡️1)</button>
         </div>
     </div>
 
-    <div id="modal-vs" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-surface rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl animate-pop">
-            <h2 class="text-2xl font-extrabold text-slate-800 mb-1">対戦モード</h2>
-            <p class="text-slate-500 mb-6 text-sm">5点先取ルール。お手つきは休み。</p>
-            <button onclick="startVsMode(true)" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3.5 rounded-xl mb-3 text-base flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95">
-                <i data-lucide="bot" class="w-5 h-5"></i> 1人で遊ぶ (vs CPU)
-            </button>
-            <button onclick="startVsMode(false)" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3.5 rounded-xl mb-4 text-base flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95">
-                <i data-lucide="users" class="w-5 h-5"></i> 2人で遊ぶ (対人戦)
-            </button>
-            <button onclick="closeModal('modal-vs')" class="text-slate-400 font-bold py-2 text-sm hover:text-slate-600">キャンセル</button>
+    <!-- Theme Modal -->
+    <div id="modal-theme" class="hidden fixed inset-0 bg-slate-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-surface rounded-2xl p-6 w-full max-w-sm shadow-xl animate-pop border border-slate-100">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-extrabold text-slate-800 flex items-center gap-2"><i data-lucide="palette" class="w-5 h-5 text-primary"></i> テーマ設定</h2>
+                <button onclick="closeModal('modal-theme')" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="grid grid-cols-1 gap-2">
+                <button onclick="applyTheme('default')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
+                    <div class="w-5 h-5 rounded-full bg-[#F4F7F9] border-2 border-[#3B5EE8]"></div> <span class="text-sm font-bold text-slate-700">デフォルト</span>
+                </button>
+                <button onclick="applyTheme('pistachio')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
+                    <div class="w-5 h-5 rounded-full bg-[#E8F5E9] border-2 border-[#38A169]"></div> <span class="text-sm font-bold text-slate-700">クラッシュ・ピスタチオ</span>
+                </button>
+                <button onclick="applyTheme('lavender')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
+                    <div class="w-5 h-5 rounded-full bg-[#F3E8FF] border-2 border-[#805AD5]"></div> <span class="text-sm font-bold text-slate-700">シャイニー・ラベンダー</span>
+                </button>
+                <button onclick="applyTheme('sky')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
+                    <div class="w-5 h-5 rounded-full bg-[#E0F2FE] border-2 border-[#0284C7]"></div> <span class="text-sm font-bold text-slate-700">スカイ・ウォッシュ</span>
+                </button>
+                <button onclick="applyTheme('apricot')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
+                    <div class="w-5 h-5 rounded-full bg-[#FFEDD5] border-2 border-[#EA580C]"></div> <span class="text-sm font-bold text-slate-700">ジューシー・アプリコット</span>
+                </button>
+                <button onclick="applyTheme('cyan')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
+                    <div class="w-5 h-5 rounded-full bg-[#CCFBF1] border-2 border-[#0D9488]"></div> <span class="text-sm font-bold text-slate-700">ネオ・シアン・ミント</span>
+                </button>
+                <button onclick="applyTheme('cyber')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-600 hover:border-indigo-500 transition-colors bg-slate-800 text-white">
+                    <div class="w-5 h-5 rounded-full bg-[#0E1525] border-2 border-[#6366F1]"></div> <span class="text-sm font-bold text-white">ディープ・サイバー・ナイト</span>
+                </button>
+            </div>
         </div>
     </div>
 
     <div id="modal-result" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-surface rounded-3xl p-8 w-full max-w-sm text-center shadow-2xl animate-pop relative overflow-hidden">
-            <div class="absolute -top-10 -left-10 w-32 h-32 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-            <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
-            <div id="res-icon" class="mx-auto w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4 relative z-10"></div>
+        <div class="bg-surface rounded-2xl p-8 w-full max-w-sm text-center shadow-2xl animate-pop border border-slate-100 relative overflow-hidden">
+            <div id="res-icon" class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 relative z-10"></div>
             <h2 id="res-title" class="text-2xl font-extrabold text-slate-800 mb-2 relative z-10"></h2>
             <p id="res-desc" class="text-slate-500 mb-6 text-sm relative z-10"></p>
-            <div id="res-extra" class="mb-6 text-left relative z-10 text-sm"></div>
-            <button onclick="navTo('dashboard'); closeModal('modal-result')" class="w-full bg-primary hover:bg-primaryHover text-white font-bold py-3 rounded-xl shadow-md relative z-10">トップに戻る</button>
+            <div id="res-extra" class="mb-6 text-left text-sm w-full flex flex-col items-center relative z-10"></div>
+            <button onclick="navTo('dashboard'); closeModal('modal-result')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors text-sm relative z-10">トップに戻る</button>
         </div>
     </div>
 
     <!-- ================= JavaScript ================= -->
     <script>
-        // --- 0. Web Audio API (効果音) ---
+        // --- Safe Storage Wrapper (フォールバック機能) ---
+        const storageMock = (() => {
+            let store = {};
+            return {
+                getItem: (key) => store[key] || null,
+                setItem: (key, value) => { store[key] = value.toString(); },
+                removeItem: (key) => { delete store[key]; },
+                clear: () => { store = {}; }
+            };
+        })();
+
+        let storage;
+        try {
+            const x = '__storage_test__';
+            window.localStorage.setItem(x, x);
+            window.localStorage.removeItem(x);
+            storage = window.localStorage;
+        } catch (e) {
+            console.warn('localStorage is disabled. Using memory storage.');
+            storage = storageMock;
+        }
+
+        // --- 0. Web Audio API ---
         let audioCtx = null;
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
         }
 
         function playSound(type) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
+            osc.connect(gainNode); gainNode.connect(audioCtx.destination);
             const now = audioCtx.currentTime;
             
             if (type === 'correct') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, now);
-                osc.frequency.exponentialRampToValueAtTime(1760, now + 0.1);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(880, now); osc.frequency.exponentialRampToValueAtTime(1760, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
             } else if (type === 'wrong') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
-                gainNode.gain.setValueAtTime(0.1, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+                gainNode.gain.setValueAtTime(0.1, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
             } else if (type === 'match') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(523.25, now);
-                osc.frequency.setValueAtTime(659.25, now + 0.1);
-                osc.frequency.setValueAtTime(783.99, now + 0.2);
-                gainNode.gain.setValueAtTime(0.05, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                osc.start(now);
-                osc.stop(now + 0.4);
+                osc.type = 'square'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); osc.frequency.setValueAtTime(783.99, now + 0.2);
+                gainNode.gain.setValueAtTime(0.05, now); gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
             }
         }
 
-        // --- 1. Data (151単語すべて - []は削除済み) ---
-        const wordData = [
-            // My Dictionary ③
-            {en: "sport", jp: "スポーツ", cat: "My Dictionary ③"},
-            {en: "badminton", jp: "バドミントン", cat: "My Dictionary ③"},
-            {en: "baseball", jp: "野球", cat: "My Dictionary ③"},
-            {en: "basketball", jp: "バスケットボール", cat: "My Dictionary ③"},
-            {en: "judo", jp: "柔道", cat: "My Dictionary ③"},
-            {en: "rugby", jp: "ラグビー", cat: "My Dictionary ③"},
-            {en: "skateboarding", jp: "スケートボード（に乗ること）", cat: "My Dictionary ③"},
-            {en: "skiing", jp: "スキー（ですべること）", cat: "My Dictionary ③"},
-            {en: "soccer", jp: "サッカー", cat: "My Dictionary ③"},
-            {en: "table tennis", jp: "卓球", cat: "My Dictionary ③"},
-            {en: "tennis", jp: "テニス", cat: "My Dictionary ③"},
-            {en: "volleyball", jp: "バレーボール", cat: "My Dictionary ③"},
-            {en: "wheelchair basketball", jp: "車いすバスケットボール", cat: "My Dictionary ③"},
-            {en: "cool", jp: "かっこいい", cat: "My Dictionary ③"},
-            {en: "cute", jp: "かわいい", cat: "My Dictionary ③"},
-            {en: "famous", jp: "有名な", cat: "My Dictionary ③"},
-            {en: "friendly", jp: "親しみのある", cat: "My Dictionary ③"},
-            {en: "kind", jp: "親切な・優しい", cat: "My Dictionary ③"},
-            {en: "strong", jp: "強い", cat: "My Dictionary ③"},
-            {en: "brave", jp: "勇敢な", cat: "My Dictionary ③"},
-            {en: "funny", jp: "おもしろい", cat: "My Dictionary ③"},
-            {en: "smart", jp: "かしこい", cat: "My Dictionary ③"},
-            {en: "drum", jp: "太鼓、ドラム", cat: "My Dictionary ③"},
-            {en: "guitar", jp: "ギター", cat: "My Dictionary ③"},
-            {en: "piano", jp: "ピアノ", cat: "My Dictionary ③"},
-            {en: "recorder", jp: "リコーダー", cat: "My Dictionary ③"},
-            {en: "trumpet", jp: "トランペット", cat: "My Dictionary ③"},
-            {en: "violin", jp: "バイオリン", cat: "My Dictionary ③"},
-            // My Dictionary ④
-            {en: "color", jp: "色", cat: "My Dictionary ④"},
-            {en: "black", jp: "黒（の）", cat: "My Dictionary ④"},
-            {en: "blue", jp: "青（の）", cat: "My Dictionary ④"},
-            {en: "brown", jp: "茶色の", cat: "My Dictionary ④"},
-            {en: "green", jp: "緑色（の）", cat: "My Dictionary ④"},
-            {en: "orange", jp: "オレンジ色（の）", cat: "My Dictionary ④"},
-            {en: "pink", jp: "ピンク色（の）", cat: "My Dictionary ④"},
-            {en: "purple", jp: "紫色（の）", cat: "My Dictionary ④"},
-            {en: "red", jp: "赤色（の）", cat: "My Dictionary ④"},
-            {en: "white", jp: "白色（の）", cat: "My Dictionary ④"},
-            {en: "yellow", jp: "黄色（の）", cat: "My Dictionary ④"},
-            {en: "cook", jp: "料理する", cat: "My Dictionary ④"},
-            {en: "draw pictures", jp: "絵をかく", cat: "My Dictionary ④"},
-            {en: "drink tea", jp: "茶を飲む", cat: "My Dictionary ④"},
-            {en: "go to the library", jp: "図書館に行く", cat: "My Dictionary ④"},
-            {en: "go to the park", jp: "公園に行く", cat: "My Dictionary ④"},
-            {en: "listen to music", jp: "音楽を聞く", cat: "My Dictionary ④"},
-            {en: "make cakes", jp: "ケーキを作る", cat: "My Dictionary ④"},
-            {en: "play the guitar", jp: "ギターを演奏する", cat: "My Dictionary ④"},
-            {en: "read books", jp: "本を読む", cat: "My Dictionary ④"},
-            {en: "ride a bike", jp: "自転車に乗る", cat: "My Dictionary ④"},
-            {en: "run", jp: "走る", cat: "My Dictionary ④"},
-            {en: "see a movie", jp: "映画を見る", cat: "My Dictionary ④"},
-            {en: "sing", jp: "歌う", cat: "My Dictionary ④"},
-            {en: "swim", jp: "泳ぐ", cat: "My Dictionary ④"},
-            {en: "talk with my friend", jp: "友達と話す", cat: "My Dictionary ④"},
-            {en: "use my computer", jp: "コンピュータを使う", cat: "My Dictionary ④"},
-            {en: "watch TV", jp: "テレビを見る", cat: "My Dictionary ④"},
-            {en: "write a letter", jp: "手紙を書く", cat: "My Dictionary ④"},
-            {en: "play cards", jp: "トランプをする", cat: "My Dictionary ④"},
-            {en: "jump rope", jp: "なわとびをする", cat: "My Dictionary ④"},
-            {en: "do a fun quiz", jp: "楽しいクイズをする", cat: "My Dictionary ④"},
-            // My Dictionary ⑤
-            {en: "heart", jp: "ハート型", cat: "My Dictionary ⑤"},
-            {en: "star", jp: "星型", cat: "My Dictionary ⑤"},
-            {en: "big", jp: "大きい", cat: "My Dictionary ⑤"},
-            {en: "small", jp: "小さい", cat: "My Dictionary ⑤"},
-            {en: "long", jp: "長い", cat: "My Dictionary ⑤"},
-            {en: "short", jp: "短い", cat: "My Dictionary ⑤"},
-            {en: "old", jp: "古い", cat: "My Dictionary ⑤"},
-            {en: "new", jp: "新しい", cat: "My Dictionary ⑤"},
-            {en: "hard", jp: "かたい", cat: "My Dictionary ⑤"},
-            {en: "soft", jp: "やわらかい", cat: "My Dictionary ⑤"},
-            {en: "bag", jp: "袋、カバン", cat: "My Dictionary ⑤"},
-            {en: "book", jp: "本", cat: "My Dictionary ⑤"},
-            {en: "clock", jp: "時計", cat: "My Dictionary ⑤"},
-            {en: "computer", jp: "コンピュータ", cat: "My Dictionary ⑤"},
-            {en: "hat", jp: "帽子", cat: "My Dictionary ⑤"},
-            {en: "notebook", jp: "ノート", cat: "My Dictionary ⑤"},
-            {en: "pen", jp: "ペン", cat: "My Dictionary ⑤"},
-            {en: "pencil", jp: "鉛筆", cat: "My Dictionary ⑤"},
-            {en: "pencil case", jp: "筆箱", cat: "My Dictionary ⑤"},
-            {en: "ruler", jp: "ものさし、定規", cat: "My Dictionary ⑤"},
-            {en: "scissors", jp: "はさみ", cat: "My Dictionary ⑤"},
-            {en: "watch", jp: "腕時計", cat: "My Dictionary ⑤"},
-            {en: "cap", jp: "（ふちのない）帽子", cat: "My Dictionary ⑤"},
-            {en: "cup", jp: "カップ", cat: "My Dictionary ⑤"},
-            {en: "eraser", jp: "消しゴム", cat: "My Dictionary ⑤"},
-            {en: "pants", jp: "ズボン", cat: "My Dictionary ⑤"},
-            {en: "shoe", jp: "くつ", cat: "My Dictionary ⑤"},
-            {en: "T-shirt", jp: "Tシャツ", cat: "My Dictionary ⑤"},
-            // Lesson２
-            {en: "smile", jp: "ほほえみ", cat: "Lesson２"},
-            {en: "popular", jp: "人気のある", cat: "Lesson２"},
-            {en: "her", jp: "彼女の", cat: "Lesson２"},
-            {en: "powerful", jp: "力の強い", cat: "Lesson２"},
-            {en: "voice", jp: "声", cat: "Lesson２"},
-            {en: "she", jp: "彼女は、彼女が", cat: "Lesson２"},
-            {en: "can", jp: "…することができる", cat: "Lesson２"},
-            {en: "very", jp: "とても", cat: "Lesson２"},
-            {en: "well", jp: "うまく、上手に", cat: "Lesson２"},
-            {en: "he", jp: "彼は、彼が", cat: "Lesson２"},
-            {en: "is", jp: "（…で）ある", cat: "Lesson２"},
-            {en: "singer", jp: "歌手", cat: "Lesson２"},
-            {en: "favorite", jp: "お気に入りの", cat: "Lesson２"},
-            {en: "song", jp: "歌", cat: "Lesson２"},
-            {en: "it", jp: "それは、それが", cat: "Lesson２"},
-            {en: "please", jp: "どうぞ、お願いします", cat: "Lesson２"},
-            {en: "teach", jp: "教える", cat: "Lesson２"},
-            {en: "sure", jp: "もちろん、はい", cat: "Lesson２"},
-            {en: "piece", jp: "ひとかけら、（将棋などの）駒", cat: "Lesson２"},
-            {en: "move", jp: "動く", cat: "Lesson２"},
-            {en: "space", jp: "場所、空間", cat: "Lesson２"},
-            {en: "forward", jp: "前へ", cat: "Lesson２"},
-            {en: "uncle", jp: "おじ", cat: "Lesson２"},
-            {en: "language", jp: "言語、ことば", cat: "Lesson２"},
-            {en: "his", jp: "彼の", cat: "Lesson２"},
-            {en: "speak", jp: "（ある言語を）話す", cat: "Lesson２"},
-            // Lesson３
-            {en: "treasure", jp: "宝物", cat: "Lesson３"},
-            {en: "camera", jp: "カメラ", cat: "Lesson３"},
-            {en: "open", jp: "あいている、営業中で", cat: "Lesson３"},
-            {en: "o'clock", jp: "…時", cat: "Lesson３"},
-            {en: "gate", jp: "門", cat: "Lesson３"},
-            {en: "scary", jp: "恐ろしい、怖い", cat: "Lesson３"},
-            {en: "statue", jp: "像", cat: "Lesson３"},
-            {en: "zucchini", jp: "ズッキーニ", cat: "Lesson３"},
-            {en: "Japanese-style", jp: "日本式の", cat: "Lesson３"},
-            {en: "shop", jp: "店", cat: "Lesson３"},
-            {en: "from", jp: "…から（の）", cat: "Lesson３"},
-            {en: "that", jp: "それは〔が〕、あれは〔が〕、あの", cat: "Lesson３"},
-            {en: "we", jp: "私たちは、私たちが", cat: "Lesson３"},
-            {en: "dictionary", jp: "辞書", cat: "Lesson３"},
-            {en: "blackboard", jp: "黒板", cat: "Lesson３"},
-            {en: "correct", jp: "正しい", cat: "Lesson３"},
-            {en: "almost", jp: "ほとんど", cat: "Lesson３"},
-            {en: "wrong", jp: "間違った〔ている〕", cat: "Lesson３"},
-            {en: "Indian", jp: "インドの", cat: "Lesson３"},
-            {en: "traditional", jp: "伝統的な", cat: "Lesson３"},
-            {en: "musical", jp: "音楽の", cat: "Lesson３"},
-            {en: "instrument", jp: "楽器", cat: "Lesson３"},
-            {en: "little", jp: "小さい、少し", cat: "Lesson３"},
-            {en: "online", jp: "オンラインの", cat: "Lesson３"},
-            {en: "gift", jp: "贈り物", cat: "Lesson３"},
-            {en: "aunt", jp: "おば", cat: "Lesson３"},
-            {en: "right", jp: "正しい", cat: "Lesson３"},
-            {en: "character", jp: "性格、登場人物", cat: "Lesson３"},
-            {en: "him", jp: "彼を、彼に", cat: "Lesson３"},
-            {en: "nickname", jp: "ニックネーム、あだな", cat: "Lesson３"},
-            {en: "idea", jp: "考え、意見", cat: "Lesson３"},
-            {en: "Harry", jp: "ハリー", cat: "Lesson３"},
-            {en: "Snufkin", jp: "スナフキン", cat: "Lesson３"},
-            {en: "who", jp: "だれ、だれが", cat: "Lesson３"},
-            {en: "maybe", jp: "たぶん", cat: "Lesson３"},
-            {en: "carry", jp: "運ぶ", cat: "Lesson３"},
-            {en: "room", jp: "部屋、室", cat: "Lesson３"}
+        // --- 1. Data Parsing (151 words) ---
+        const rawWords = [
+            {en: "sport", jp: "スポーツ", cat: "My Dictionary 3"}, {en: "badminton", jp: "バドミントン", cat: "My Dictionary 3"},
+            {en: "baseball", jp: "野球", cat: "My Dictionary 3"}, {en: "basketball", jp: "バスケットボール", cat: "My Dictionary 3"},
+            {en: "judo", jp: "柔道", cat: "My Dictionary 3"}, {en: "rugby", jp: "ラグビー", cat: "My Dictionary 3"},
+            {en: "skateboarding", jp: "スケートボード（に乗ること）", cat: "My Dictionary 3"}, {en: "skiing", jp: "スキー（ですべること）", cat: "My Dictionary 3"},
+            {en: "soccer", jp: "サッカー", cat: "My Dictionary 3"}, {en: "table tennis", jp: "卓球", cat: "My Dictionary 3"},
+            {en: "tennis", jp: "テニス", cat: "My Dictionary 3"}, {en: "volleyball", jp: "バレーボール", cat: "My Dictionary 3"},
+            {en: "wheelchair basketball", jp: "車いすバスケットボール", cat: "My Dictionary 3"}, {en: "cool", jp: "かっこいい", cat: "My Dictionary 3"},
+            {en: "cute", jp: "かわいい", cat: "My Dictionary 3"}, {en: "famous", jp: "有名な", cat: "My Dictionary 3"},
+            {en: "friendly", jp: "親しみのある", cat: "My Dictionary 3"}, {en: "kind", jp: "親切な・優しい", cat: "My Dictionary 3"},
+            {en: "strong", jp: "強い", cat: "My Dictionary 3"}, {en: "brave", jp: "勇敢な", cat: "My Dictionary 3"},
+            {en: "funny", jp: "おもしろい", cat: "My Dictionary 3"}, {en: "smart", jp: "かしこい", cat: "My Dictionary 3"},
+            {en: "drum", jp: "太鼓、ドラム", cat: "My Dictionary 3"}, {en: "guitar", jp: "ギター", cat: "My Dictionary 3"},
+            {en: "piano", jp: "ピアノ", cat: "My Dictionary 3"}, {en: "recorder", jp: "リコーダー", cat: "My Dictionary 3"},
+            {en: "trumpet", jp: "トランペット", cat: "My Dictionary 3"}, {en: "violin", jp: "バイオリン", cat: "My Dictionary 3"},
+            {en: "color", jp: "色", cat: "My Dictionary 4"}, {en: "black", jp: "黒（の）", cat: "My Dictionary 4"},
+            {en: "blue", jp: "青（の）", cat: "My Dictionary 4"}, {en: "brown", jp: "茶色の", cat: "My Dictionary 4"},
+            {en: "green", jp: "緑色（の）", cat: "My Dictionary 4"}, {en: "orange", jp: "オレンジ色（の）", cat: "My Dictionary 4"},
+            {en: "pink", jp: "ピンク色（の）", cat: "My Dictionary 4"}, {en: "purple", jp: "紫色（の）", cat: "My Dictionary 4"},
+            {en: "red", jp: "赤色（の）", cat: "My Dictionary 4"}, {en: "white", jp: "白色（の）", cat: "My Dictionary 4"},
+            {en: "yellow", jp: "黄色（の）", cat: "My Dictionary 4"}, {en: "cook", jp: "料理する", cat: "My Dictionary 4"},
+            {en: "draw pictures", jp: "絵をかく[２語]", cat: "My Dictionary 4"}, {en: "drink tea", jp: "茶を飲む[2語]", cat: "My Dictionary 4"},
+            {en: "go to the library", jp: "図書館に行く[４語]", cat: "My Dictionary 4"}, {en: "go to the park", jp: "公園に行く[4語]", cat: "My Dictionary 4"},
+            {en: "listen to music", jp: "音楽を聞く[3語]", cat: "My Dictionary 4"}, {en: "make cakes", jp: "ケーキを作る[2語]", cat: "My Dictionary 4"},
+            {en: "play the guitar", jp: "ギターを演奏する[3語]", cat: "My Dictionary 4"}, {en: "read books", jp: "本を読む[２語]", cat: "My Dictionary 4"},
+            {en: "ride a bike", jp: "自転車に乗る", cat: "My Dictionary 4"}, {en: "run", jp: "走る", cat: "My Dictionary 4"},
+            {en: "see a movie", jp: "映画を見る", cat: "My Dictionary 4"}, {en: "sing", jp: "歌う", cat: "My Dictionary 4"},
+            {en: "swim", jp: "泳ぐ", cat: "My Dictionary 4"}, {en: "talk with my friend", jp: "友達と話す[4語]", cat: "My Dictionary 4"},
+            {en: "use my computer", jp: "コンピュータを使う[3語]", cat: "My Dictionary 4"}, {en: "watch TV", jp: "テレビを見る[２語]", cat: "My Dictionary 4"},
+            {en: "write a letter", jp: "手紙を書く[３語]", cat: "My Dictionary 4"}, {en: "play cards", jp: "トランプをする", cat: "My Dictionary 4"},
+            {en: "jump rope", jp: "なわとびをする", cat: "My Dictionary 4"}, {en: "do a fun quiz", jp: "楽しいクイズをする", cat: "My Dictionary 4"},
+            {en: "heart", jp: "ハート型", cat: "My Dictionary 5"}, {en: "star", jp: "星型", cat: "My Dictionary 5"},
+            {en: "big", jp: "大きい", cat: "My Dictionary 5"}, {en: "small", jp: "小さい", cat: "My Dictionary 5"},
+            {en: "long", jp: "長い", cat: "My Dictionary 5"}, {en: "short", jp: "短い", cat: "My Dictionary 5"},
+            {en: "old", jp: "古い", cat: "My Dictionary 5"}, {en: "new", jp: "新しい", cat: "My Dictionary 5"},
+            {en: "hard", jp: "かたい", cat: "My Dictionary 5"}, {en: "soft", jp: "やわらかい", cat: "My Dictionary 5"},
+            {en: "bag", jp: "袋、カバン", cat: "My Dictionary 5"}, {en: "book", jp: "本", cat: "My Dictionary 5"},
+            {en: "clock", jp: "時計", cat: "My Dictionary 5"}, {en: "computer", jp: "コンピュータ", cat: "My Dictionary 5"},
+            {en: "hat", jp: "帽子", cat: "My Dictionary 5"}, {en: "notebook", jp: "ノート", cat: "My Dictionary 5"},
+            {en: "pen", jp: "ペン", cat: "My Dictionary 5"}, {en: "pencil", jp: "鉛筆", cat: "My Dictionary 5"},
+            {en: "pencil case", jp: "筆箱", cat: "My Dictionary 5"}, {en: "ruler", jp: "ものさし、定規", cat: "My Dictionary 5"},
+            {en: "scissors", jp: "はさみ", cat: "My Dictionary 5"}, {en: "watch", jp: "腕時計", cat: "My Dictionary 5"},
+            {en: "cap", jp: "（ふちのない）帽子", cat: "My Dictionary 5"}, {en: "cup", jp: "カップ", cat: "My Dictionary 5"},
+            {en: "eraser", jp: "消しゴム", cat: "My Dictionary 5"}, {en: "pants", jp: "ズボン", cat: "My Dictionary 5"},
+            {en: "shoe", jp: "くつ", cat: "My Dictionary 5"}, {en: "T-shirt", jp: "Tシャツ", cat: "My Dictionary 5"},
+            {en: "smile", jp: "ほほえみ", cat: "Lesson 2"}, {en: "popular", jp: "人気のある", cat: "Lesson 2"},
+            {en: "her", jp: "彼女の", cat: "Lesson 2"}, {en: "powerful", jp: "力の強い", cat: "Lesson 2"},
+            {en: "voice", jp: "声", cat: "Lesson 2"}, {en: "she", jp: "彼女は、彼女が", cat: "Lesson 2"},
+            {en: "can", jp: "…することができる", cat: "Lesson 2"}, {en: "very", jp: "とても", cat: "Lesson 2"},
+            {en: "well", jp: "うまく、上手に", cat: "Lesson 2"}, {en: "he", jp: "彼は、彼が", cat: "Lesson 2"},
+            {en: "is", jp: "（…で）ある", cat: "Lesson 2"}, {en: "singer", jp: "歌手", cat: "Lesson 2"},
+            {en: "favorite", jp: "お気に入りの", cat: "Lesson 2"}, {en: "song", jp: "歌", cat: "Lesson 2"},
+            {en: "it", jp: "それは、それが", cat: "Lesson 2"}, {en: "please", jp: "どうぞ、お願いします", cat: "Lesson 2"},
+            {en: "teach", jp: "教える", cat: "Lesson 2"}, {en: "sure", jp: "もちろん、はい", cat: "Lesson 2"},
+            {en: "piece", jp: "ひとかけら、（将棋などの）駒", cat: "Lesson 2"}, {en: "move", jp: "動く", cat: "Lesson 2"},
+            {en: "space", jp: "場所、空間", cat: "Lesson 2"}, {en: "forward", jp: "前へ", cat: "Lesson 2"},
+            {en: "uncle", jp: "おじ", cat: "Lesson 2"}, {en: "language", jp: "言語、ことば", cat: "Lesson 2"},
+            {en: "his", jp: "彼の", cat: "Lesson 2"}, {en: "speak", jp: "（ある言語を）話す", cat: "Lesson 2"},
+            {en: "treasure", jp: "宝物", cat: "Lesson 3"}, {en: "camera", jp: "カメラ", cat: "Lesson 3"},
+            {en: "open", jp: "あいている、営業中で", cat: "Lesson 3"}, {en: "o'clock", jp: "…時", cat: "Lesson 3"},
+            {en: "gate", jp: "門", cat: "Lesson 3"}, {en: "scary", jp: "恐ろしい、怖い", cat: "Lesson 3"},
+            {en: "statue", jp: "像", cat: "Lesson 3"}, {en: "zucchini", jp: "ズッキーニ", cat: "Lesson 3"},
+            {en: "Japanese-style", jp: "日本式の", cat: "Lesson 3"}, {en: "shop", jp: "店", cat: "Lesson 3"},
+            {en: "from", jp: "…から（の）", cat: "Lesson 3"}, {en: "that", jp: "それは〔が〕、あれは〔が〕、あの", cat: "Lesson 3"},
+            {en: "we", jp: "私たちは、私たちが", cat: "Lesson 3"}, {en: "dictionary", jp: "辞書", cat: "Lesson 3"},
+            {en: "blackboard", jp: "黒板", cat: "Lesson 3"}, {en: "correct", jp: "正しい", cat: "Lesson 3"},
+            {en: "almost", jp: "ほとんど", cat: "Lesson 3"}, {en: "wrong", jp: "間違った〔ている〕", cat: "Lesson 3"},
+            {en: "Indian", jp: "インドの", cat: "Lesson 3"}, {en: "traditional", jp: "伝統的な", cat: "Lesson 3"},
+            {en: "musical", jp: "音楽の", cat: "Lesson 3"}, {en: "instrument", jp: "楽器", cat: "Lesson 3"},
+            {en: "little", jp: "小さい、少し", cat: "Lesson 3"}, {en: "online", jp: "オンラインの", cat: "Lesson 3"},
+            {en: "gift", jp: "贈り物", cat: "Lesson 3"}, {en: "aunt", jp: "おば", cat: "Lesson 3"},
+            {en: "right", jp: "正しい", cat: "Lesson 3"}, {en: "character", jp: "性格、登場人物", cat: "Lesson 3"},
+            {en: "him", jp: "彼を、彼に", cat: "Lesson 3"}, {en: "nickname", jp: "ニックネーム、あだな", cat: "Lesson 3"},
+            {en: "idea", jp: "考え、意見", cat: "Lesson 3"}, {en: "Harry", jp: "ハリー", cat: "Lesson 3"},
+            {en: "Snufkin", jp: "スナフキン", cat: "Lesson 3"}, {en: "who", jp: "だれ、だれが", cat: "Lesson 3"},
+            {en: "maybe", jp: "たぶん", cat: "Lesson 3"}, {en: "carry", jp: "運ぶ", cat: "Lesson 3"},
+            {en: "room", jp: "部屋、室", cat: "Lesson 3"}
         ];
+
+        const wordData = rawWords.map(w => {
+            return { en: w.en, jp: w.jp.replace(/\[.*?\]/g, '').replace(/［.*?］/g, '').trim(), cat: w.cat };
+        });
         const categories = ["全て", ...new Set(wordData.map(w => w.cat))];
 
+        // --- Theme Init ---
+        const savedTheme = storage.getItem('wm_pro_theme') || 'default';
+        applyTheme(savedTheme);
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            storage.setItem('wm_pro_theme', theme);
+            closeModal('modal-theme');
+        }
+
         // --- 2. State & Storage ---
-        let totalSeconds = parseInt(localStorage.getItem('wm_pro_sec'), 10);
+        let totalSeconds = parseInt(storage.getItem('wm_pro_sec'));
         if (isNaN(totalSeconds)) totalSeconds = 0;
+        let lastLogin = storage.getItem('wm_pro_date');
+        let streak = parseInt(storage.getItem('wm_pro_streak')) || 1;
+        let errors = JSON.parse(storage.getItem('wm_pro_errors')) || {};
+        let matchingRanks = JSON.parse(storage.getItem('wm_pro_ranks')) || [];
+        let ttRanks = JSON.parse(storage.getItem('wm_pro_tt_ranks')) || [];
+        let cpuLevel = parseInt(storage.getItem('wm_pro_cpu')) || 1;
         
-        let lastLogin = localStorage.getItem('wm_pro_date');
-        let streak = parseInt(localStorage.getItem('wm_pro_streak'), 10) || 1;
-        let errors = JSON.parse(localStorage.getItem('wm_pro_errors')) || {};
-        let matchingRanks = JSON.parse(localStorage.getItem('wm_pro_ranks')) || [];
-        let cpuLevel = parseInt(localStorage.getItem('wm_pro_cpu'), 10) || 1;
+        let stamina = parseInt(storage.getItem('wm_pro_stamina'));
+        if(isNaN(stamina)) stamina = 10;
+        let staminaTime = parseInt(storage.getItem('wm_pro_stamina_time'));
+        if(isNaN(staminaTime)) staminaTime = Date.now();
+        let totalExp = parseInt(storage.getItem('wm_pro_exp')) || 0;
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
             checkLogin();
             updateTimeUI();
             
+            // 安全なダッシュボード更新処理（エラー回避）
+            try { updateDashboardScores(); } catch(e) { console.error(e); }
+            
             setInterval(() => {
                 totalSeconds++;
-                localStorage.setItem('wm_pro_sec', totalSeconds.toString());
+                storage.setItem('wm_pro_sec', totalSeconds.toString());
                 if(totalSeconds % 60 === 0) updateTimeUI();
+                updateStaminaLogic();
             }, 1000);
             
-            document.getElementById('display-cpu-level').innerText = cpuLevel;
+            if (document.getElementById('display-cpu-level')) {
+                document.getElementById('display-cpu-level').innerText = cpuLevel;
+            }
             renderVocabulary();
             renderKeyboard();
             initTypingListener();
+            populateCategorySelect();
         });
 
         function checkLogin() {
@@ -555,10 +707,10 @@
                 const yesterday = new Date(Date.now() - 86400000).toDateString();
                 if (lastLogin === yesterday) streak++;
                 else if (lastLogin) streak = 1;
-                localStorage.setItem('wm_pro_date', today);
-                localStorage.setItem('wm_pro_streak', streak.toString());
+                storage.setItem('wm_pro_date', today);
+                storage.setItem('wm_pro_streak', streak.toString());
             }
-            document.getElementById('days-count').innerText = streak;
+            if(document.getElementById('days-count')) document.getElementById('days-count').innerText = streak;
         }
 
         function updateTimeUI() {
@@ -567,12 +719,84 @@
             m = m % 60;
             let str = h > 0 ? `${h}時間 ${m}分` : `${m}分`;
             if (totalSeconds < 60) str = "0分";
-            document.getElementById('time-count').innerText = str;
+            if(document.getElementById('time-count')) document.getElementById('time-count').innerText = str;
+        }
+
+        function updateStaminaLogic() {
+            let now = Date.now();
+            if(stamina < 10) {
+                let elapsed = now - staminaTime;
+                let recoveryInterval = 10 * 60 * 1000;
+                let recovered = Math.floor(elapsed / recoveryInterval);
+                if(recovered > 0) {
+                    stamina = Math.min(10, stamina + recovered);
+                    staminaTime += recovered * recoveryInterval;
+                    storage.setItem('wm_pro_stamina', stamina);
+                    storage.setItem('wm_pro_stamina_time', staminaTime);
+                }
+            }
+            if(document.getElementById('stamina-count')) document.getElementById('stamina-count').innerText = stamina;
+            if (stamina < 10) {
+                let remaining = (10 * 60 * 1000) - ((now - staminaTime) % (10 * 60 * 1000));
+                let m = Math.floor(remaining / 60000);
+                let s = Math.floor((remaining % 60000) / 1000).toString().padStart(2, '0');
+                if(document.getElementById('stamina-timer')) {
+                    document.getElementById('stamina-timer').innerText = `${m}:${s}`;
+                    document.getElementById('stamina-timer').classList.replace('bg-slate-50', 'bg-yellow-50');
+                    document.getElementById('stamina-timer').classList.replace('text-slate-400', 'text-yellow-600');
+                }
+            } else {
+                if(document.getElementById('stamina-timer')) {
+                    document.getElementById('stamina-timer').innerText = `MAX`;
+                    document.getElementById('stamina-timer').classList.replace('bg-yellow-50', 'bg-slate-50');
+                    document.getElementById('stamina-timer').classList.replace('text-yellow-600', 'text-slate-400');
+                }
+            }
+        }
+
+        function useStamina() {
+            if(stamina > 0) {
+                if(stamina === 10) staminaTime = Date.now();
+                stamina--;
+                storage.setItem('wm_pro_stamina', stamina);
+                storage.setItem('wm_pro_stamina_time', staminaTime);
+                updateStaminaLogic();
+                return true;
+            } else {
+                showResult("スタミナ不足", "スタミナが回復するまでお待ちください。", "", "info");
+                return false;
+            }
+        }
+
+        function addExp(amount) {
+            totalExp += amount;
+            storage.setItem('wm_pro_exp', totalExp);
+            if(document.getElementById('exp-count')) document.getElementById('exp-count').innerText = totalExp;
+        }
+
+        function updateDashboardScores() {
+            if(!document.getElementById('dash-score-4choice')) return;
+            
+            document.getElementById('exp-count').innerText = totalExp;
+            document.getElementById('dash-score-4choice').innerText = storage.getItem('wm_pro_stats_4choice') || 0;
+            document.getElementById('dash-score-typing').innerText = storage.getItem('wm_pro_stats_typing') || 0;
+            document.getElementById('dash-score-listening').innerText = storage.getItem('wm_pro_stats_listening') || 0;
+            
+            let mb = matchingRanks.length > 0 ? matchingRanks[0].time.toFixed(1) + 's' : '--';
+            document.getElementById('dash-score-matching').innerText = mb;
+            if(document.getElementById('dash-count-matching')) document.getElementById('dash-count-matching').innerText = storage.getItem('wm_pro_stats_matching_count') || 0;
+            
+            let tb = storage.getItem('wm_pro_tt_best');
+            document.getElementById('dash-score-timetrial').innerText = tb ? parseFloat(tb).toFixed(1) + 's' : '--';
+            if(document.getElementById('dash-count-timetrial')) document.getElementById('dash-count-timetrial').innerText = storage.getItem('wm_pro_stats_tt_count') || 0;
+            
+            document.getElementById('dash-score-vs').innerText = cpuLevel;
+            if(document.getElementById('dash-count-vs')) document.getElementById('dash-count-vs').innerText = storage.getItem('wm_pro_stats_vs_count') || 0;
         }
 
         function recordError(enWord) {
             errors[enWord] = (errors[enWord] || 0) + 1;
-            localStorage.setItem('wm_pro_errors', JSON.stringify(errors));
+            storage.setItem('wm_pro_errors', JSON.stringify(errors));
             renderVocabulary();
         }
 
@@ -581,36 +805,41 @@
         function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
+        function clearAllTimers() {
+            clearInterval(mTimerInterval);
+            clearInterval(ttTimerInterval);
+            clearTimeout(vsCpuTimer);
+            vsLockAll = false; p1Locked = false; p2Locked = false;
+            if(window.speechSynthesis) window.speechSynthesis.cancel();
+        }
+
         function navTo(tab) {
+            clearAllTimers();
             document.querySelectorAll('.screen').forEach(s => {
-                s.classList.add('hidden');
-                s.classList.remove('flex');
+                s.classList.add('hidden'); s.classList.remove('flex');
             });
-            
             const targetScreen = document.getElementById('screen-' + tab);
-            targetScreen.classList.remove('hidden');
-            targetScreen.classList.add('flex');
+            targetScreen.classList.remove('hidden'); targetScreen.classList.add('flex');
             
             ['dashboard', 'vocabulary'].forEach(t => {
                 const el = document.getElementById('nav-' + t);
-                if(el) el.className = (t === tab) ? "w-full flex items-center gap-4 p-4 rounded-2xl bg-blue-50 text-primary font-bold transition-colors" : "w-full flex items-center gap-4 p-4 rounded-2xl text-slate-500 hover:bg-slate-50 font-bold transition-colors";
+                if(el) el.className = (t === tab) ? "w-full flex items-center gap-4 p-4 rounded-xl bg-blue-50 text-primary font-bold transition-colors border border-transparent" : "w-full flex items-center gap-4 p-4 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-800 font-bold transition-colors border border-transparent";
                 const mel = document.getElementById('mob-' + t);
                 if(mel) mel.className = (t === tab) ? "flex flex-col items-center p-2 text-primary" : "flex flex-col items-center p-2 text-slate-400";
             });
+            if(tab === 'dashboard') { try{updateDashboardScores();}catch(e){} }
             window.scrollTo(0,0);
         }
 
         let lastUtterance = null;
-        function playAudio(text) {
-            if(!window.speechSynthesis) return;
+        function playAudio(text, onEndCallback = null) {
+            if(!window.speechSynthesis) { if(onEndCallback) onEndCallback(); return; }
             window.speechSynthesis.cancel();
-            
-            // カッコ内の補足文字（例: [2語]）を音声から除外する処理
-            let cleanText = text.replace(/\[.*?\]/g, '').trim();
-            
+            let cleanText = text.replace(/\[.*?\]/g, '').replace(/［.*?］/g, '').trim();
             const utterance = new SpeechSynthesisUtterance(cleanText);
             utterance.lang = 'en-US';
             utterance.rate = 0.9;
+            if(onEndCallback) utterance.onend = onEndCallback;
             window.speechSynthesis.speak(utterance);
             lastUtterance = cleanText;
         }
@@ -626,25 +855,25 @@
                 
                 const section = document.createElement('div');
                 section.className = "mb-8";
-                section.innerHTML = `<h3 class="text-lg font-bold text-slate-700 border-b border-slate-200 pb-2 mb-3">${cat}</h3>`;
+                section.innerHTML = `<h3 class="text-sm font-bold text-slate-400 border-b border-slate-100 pb-2 mb-3 uppercase tracking-wider">${cat}</h3>`;
                 
                 const grid = document.createElement('div');
-                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3";
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2";
                 
                 catWords.forEach(w => {
                     const errCount = errors[w.en] || 0;
-                    const errBadge = errCount > 0 ? `<span class="bg-red-100 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="flame" class="w-3 h-3"></i> ${errCount}</span>` : '';
+                    const errBadge = errCount > 0 ? `<div class="bg-red-50 text-red-500 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="alert-circle" class="w-3 h-3"></i> ${errCount}</div>` : '';
                     
                     const card = document.createElement('div');
-                    card.className = "bg-white rounded-xl p-3 border border-slate-200 flex justify-between items-center shadow-sm hover:border-primary/30 transition-colors";
+                    card.className = "bg-white rounded-xl p-3 border border-slate-200 hover:border-primary transition-colors flex justify-between items-center group";
                     card.innerHTML = `
-                        <div class="flex flex-col">
-                            <span class="text-base font-bold text-slate-800">${w.en}</span>
-                            <span class="text-xs text-slate-500">${w.jp}</span>
+                        <div class="flex flex-col truncate pr-2">
+                            <span class="text-sm font-bold text-slate-800 truncate">${w.en}</span>
+                            <span class="text-xs text-slate-500 truncate">${w.jp}</span>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 shrink-0">
                             ${errBadge}
-                            <button onclick="initAudio(); playAudio('${w.en}')" class="p-1.5 text-slate-400 hover:text-primary rounded-full hover:bg-blue-50 transition-colors"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                            <button onclick="initAudio(); playAudio('${w.en}')" class="p-1.5 text-slate-300 hover:text-primary rounded-full hover:bg-slate-50 transition-colors"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -655,83 +884,156 @@
             lucide.createIcons();
         }
 
-        // --- 5. Mode Start ---
+        // --- 5. Setup Modal Management ---
         let pendingMode = '';
-        function openCategoryModal(mode) {
-            pendingMode = mode;
-            const list = document.getElementById('category-list');
+        let selectedSetupCategory = "全て";
+
+        function populateCategorySelect() {} // 互換性維持
+
+        function renderCategoryButtons() {
+            const list = document.getElementById('setup-category-buttons');
             list.innerHTML = '';
             categories.forEach(cat => {
                 const btn = document.createElement('button');
-                btn.className = "w-full text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 text-slate-700 hover:text-primary hover:border-primary/50 font-bold py-3 px-4 rounded-xl transition-colors text-sm";
+                const isSelected = cat === selectedSetupCategory;
+                btn.className = isSelected 
+                    ? "px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-lg transition-colors border-2 border-primary"
+                    : "px-3 py-1.5 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors border-2 border-slate-100";
                 btn.innerText = cat;
-                btn.onclick = () => { closeModal('modal-category'); startMode(pendingMode, cat); };
+                btn.onclick = () => { selectedSetupCategory = cat; renderCategoryButtons(); };
                 list.appendChild(btn);
             });
-            showModal('modal-category');
+        }
+
+        function openSetupModal(mode) {
+            pendingMode = mode;
+            selectedSetupCategory = "全て";
+            renderCategoryButtons();
+            
+            const container = document.getElementById('setup-options-container');
+            container.innerHTML = '';
+            
+            if (mode === '4choice') {
+                container.innerHTML = `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-5">出題形式</label>
+                    <div class="flex gap-2">
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                            <input type="radio" name="opt_direction" value="jp-en" class="accent-primary" checked> 日 → 英
+                        </label>
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                            <input type="radio" name="opt_direction" value="en-jp" class="accent-primary"> 英 → 日
+                        </label>
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                            <input type="radio" name="opt_direction" value="random" class="accent-primary"> ランダム
+                        </label>
+                    </div>
+                `;
+            } else if (mode === 'matching' || mode === 'vs') {
+                container.innerHTML = `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-5">対戦相手</label>
+                    <div class="flex gap-2">
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                            <i data-lucide="${mode === 'vs' ? 'bot' : 'user'}" class="w-5 h-5 text-slate-600"></i>
+                            <div><input type="radio" name="opt_player" value="1" class="accent-primary" checked> ${mode === 'vs' ? '1人で (vs CPU)' : '1人でプレイ'}</div>
+                        </label>
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                            <i data-lucide="users" class="w-5 h-5 text-red-500"></i>
+                            <div><input type="radio" name="opt_player" value="2" class="accent-primary"> 2人で (対人戦)</div>
+                        </label>
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+            showModal('modal-setup');
         }
 
         let currentQuizData = [];
-        let pendingVsCategory = '全て';
+        let currentOptions = {};
 
-        function startMode(mode, category) {
-            if (mode === 'vs') {
-                // VSの場合はカテゴリを記録して、対人/CPU選択モーダルを開く
-                pendingVsCategory = category;
-                showModal('modal-vs');
-                return;
+        function confirmSetup() {
+            if(!useStamina()) { closeModal('modal-setup'); return; }
+            closeModal('modal-setup');
+            
+            let source = selectedSetupCategory === "全て" ? wordData : wordData.filter(w => w.cat === selectedSetupCategory);
+            currentQuizData = shuffle(source);
+            
+            if (pendingMode === '4choice') {
+                currentOptions.direction = document.querySelector('input[name="opt_direction"]:checked').value;
+                currentQuizData = currentQuizData.slice(0, 5);
+                navTo('4choice');
+                init4Choice();
+            } else if (pendingMode === 'typing') {
+                currentQuizData = currentQuizData.slice(0, 5);
+                navTo('typing');
+                initTyping();
+            } else if (pendingMode === 'matching') {
+                let count = parseInt(storage.getItem('wm_pro_stats_matching_count')||0) + 1;
+                storage.setItem('wm_pro_stats_matching_count', count);
+                const players = document.querySelector('input[name="opt_player"]:checked').value;
+                
+                navTo('matching');
+                
+                if(players === '1') { initMatching(source); }
+                else { initMatchingVs(source); }
+            } else if (pendingMode === 'vs') {
+                let count = parseInt(storage.getItem('wm_pro_stats_vs_count')||0) + 1;
+                storage.setItem('wm_pro_stats_vs_count', count);
+                const isCpu = document.querySelector('input[name="opt_player"]:checked').value === '1';
+                navTo('vs');
+                startVsKaruta(isCpu, source);
+            } else if (pendingMode === 'timetrial') {
+                let count = parseInt(storage.getItem('wm_pro_stats_tt_count')||0) + 1;
+                storage.setItem('wm_pro_stats_tt_count', count);
+                navTo('timetrial');
+                initTimeTrial(source);
+            } else if (pendingMode === 'listening') {
+                navTo('listening');
+                initListening(source);
             }
-            
-            navTo(mode);
-            let source = category === "全て" ? wordData : wordData.filter(w => w.cat === category);
-            currentQuizData = shuffle(source).slice(0, 5);
-            
-            if(mode === '4choice') init4Choice();
-            if(mode === 'typing') initTyping();
-            if(mode === 'matching') initMatching(source);
         }
 
-        function showResult(title, desc, extraHtml = '') {
+        function showResult(title, desc, extraHtml = '', type = 'win') {
             document.getElementById('res-title').innerText = title;
             document.getElementById('res-desc').innerText = desc;
             document.getElementById('res-extra').innerHTML = extraHtml;
             
             const iconBox = document.getElementById('res-icon');
-            if(title.includes("Win") || title.includes("Awesome") || title.includes("Level Up") || title.includes("Clear")) {
-                iconBox.className = "mx-auto w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-4 relative z-10";
-                iconBox.innerHTML = '<i data-lucide="party-popper" class="w-8 h-8"></i>';
+            if(type === 'win') {
+                iconBox.className = "mx-auto w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-4";
+                iconBox.innerHTML = '<i data-lucide="check-circle" class="w-8 h-8"></i>';
+            } else if (type === 'vs') {
+                iconBox.className = "mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4";
+                iconBox.innerHTML = '<i data-lucide="award" class="w-8 h-8"></i>';
             } else {
-                iconBox.className = "mx-auto w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mb-4 relative z-10";
-                iconBox.innerHTML = '<i data-lucide="thumbs-up" class="w-8 h-8"></i>';
+                iconBox.className = "mx-auto w-16 h-16 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mb-4";
+                iconBox.innerHTML = '<i data-lucide="info" class="w-8 h-8"></i>';
             }
             showModal('modal-result');
             lucide.createIcons();
+            try { updateDashboardScores(); } catch(e){}
         }
 
         // --- 6. 4-Choice ---
         let qcIndex = 0;
-        function init4Choice() {
-            qcIndex = 0;
-            render4Choice();
-        }
+        function init4Choice() { qcIndex = 0; render4Choice(); }
 
         function render4Choice() {
             if(qcIndex >= 5) {
-                playSound('match');
-                showResult("Quiz Completed!", "5問やり遂げました！");
-                return;
+                playSound('match'); showResult("Completed", "5問やり遂げました！", "", "win"); return;
             }
-            
             document.getElementById('qc-current').innerText = qcIndex + 1;
             const target = currentQuizData[qcIndex];
             
-            const isEnToJp = Math.random() > 0.5;
+            let isEnToJp = false;
+            if (currentOptions.direction === 'en-jp') isEnToJp = true;
+            else if (currentOptions.direction === 'jp-en') isEnToJp = false;
+            else isEnToJp = Math.random() > 0.5;
+            
             const audioBtn = document.getElementById('qc-audio-btn');
             
             if (isEnToJp) {
                 document.getElementById('qc-text').innerText = target.en;
-                audioBtn.classList.remove('hidden');
-                playAudio(target.en);
+                audioBtn.classList.remove('hidden'); playAudio(target.en);
             } else {
                 document.getElementById('qc-text').innerText = target.jp;
                 audioBtn.classList.add('hidden');
@@ -746,22 +1048,31 @@
             
             const container = document.getElementById('qc-choices');
             container.innerHTML = '';
-            
             choices.forEach(c => {
                 let btn = document.createElement('button');
-                btn.className = 'w-full bg-surface border-2 border-slate-200 text-slate-700 font-extrabold py-4 rounded-xl text-lg hover:border-primary hover:bg-blue-50 transition-all shadow-sm';
+                btn.className = 'w-full bg-white border border-slate-200 text-slate-700 font-bold py-5 rounded-xl text-lg hover:border-primary transition-colors shadow-sm';
                 btn.innerText = isEnToJp ? c.jp : c.en;
                 
                 btn.onclick = function() {
                     initAudio();
                     if(c === target) {
                         playSound('correct');
-                        btn.className = 'w-full bg-secondary border-2 border-secondary text-white font-extrabold py-4 rounded-xl text-lg shadow-md animate-pop';
+                        let score = parseInt(storage.getItem('wm_pro_stats_4choice')||0) + 1;
+                        storage.setItem('wm_pro_stats_4choice', score);
+                        addExp(1);
+                        
+                        btn.className = 'w-full bg-primary border-primary text-white font-bold py-5 rounded-xl text-lg shadow-md animate-pop';
                         Array.from(container.children).forEach(b => b.onclick = null);
-                        setTimeout(() => { qcIndex++; render4Choice(); }, 800);
+                        
+                        if (!isEnToJp) {
+                            setTimeout(() => playAudio(target.en), 300);
+                            setTimeout(() => { qcIndex++; render4Choice(); }, 1500);
+                        } else {
+                            setTimeout(() => { qcIndex++; render4Choice(); }, 800);
+                        }
                     } else {
                         playSound('wrong');
-                        btn.className = 'w-full bg-slate-100 border-2 border-slate-200 text-slate-400 font-extrabold py-4 rounded-xl text-lg pointer-events-none cursor-not-allowed';
+                        btn.className = 'w-full bg-slate-50 border-slate-100 text-slate-400 font-bold py-5 rounded-xl text-lg pointer-events-none';
                         recordError(target.en);
                         document.getElementById('qc-text').classList.add('animate-pulse');
                         setTimeout(()=> document.getElementById('qc-text').classList.remove('animate-pulse'), 300);
@@ -771,9 +1082,8 @@
             });
         }
 
-        // --- 7. Typing & Software Keyboard ---
-        let typIndex = 0;
-        let currentTypTarget = null;
+        // --- 7. Typing ---
+        let typIndex = 0, currentTypTarget = null, typHintCount = 0;
 
         function renderKeyboard() {
             const kb = document.getElementById('software-keyboard');
@@ -781,45 +1091,30 @@
             const rows = [
                 ['q','w','e','r','t','y','u','i','o','p'],
                 ['a','s','d','f','g','h','j','k','l'],
-                ['z','x','c','v','b','n','m',' ','-'] // スペースとハイフンを追加
+                ['z','x','c','v','b','n','m',' ','-']
             ];
             rows.forEach((row, rIndex) => {
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'flex justify-center gap-1.5 mb-1.5 w-full';
-                
                 if (rIndex === 2) {
                     const bsBtn = document.createElement('button');
-                    bsBtn.className = 'bg-slate-300 text-slate-700 rounded-lg shadow-[0_3px_0_#94a3b8] font-bold px-3 py-3 active:translate-y-1 active:shadow-none text-sm';
+                    bsBtn.className = 'bg-slate-200 text-slate-600 rounded-lg font-bold px-3 py-3 active:bg-slate-300 transition-colors text-sm';
                     bsBtn.innerHTML = '<i data-lucide="delete" class="w-5 h-5"></i>';
-                    bsBtn.onclick = () => {
-                        initAudio();
-                        const input = document.getElementById('typ-input');
-                        input.value = input.value.slice(0, -1);
-                    };
+                    bsBtn.onclick = () => { initAudio(); const input = document.getElementById('typ-input'); input.value = input.value.slice(0, -1); };
                     rowDiv.appendChild(bsBtn);
                 }
-
                 row.forEach(char => {
                     const btn = document.createElement('button');
-                    // uppercaseクラスを削除し、小文字表示に
-                    btn.className = 'bg-white text-slate-800 rounded-lg shadow-[0_3px_0_#cbd5e1] font-bold flex-1 py-3 active:translate-y-1 active:shadow-none max-w-[45px] text-lg';
+                    btn.className = 'bg-white border border-slate-200 text-slate-700 rounded-lg font-bold flex-1 py-3 active:bg-slate-50 transition-colors max-w-[45px] text-lg';
                     btn.innerText = char === ' ' ? '␣' : char;
-                    btn.onclick = () => {
-                        initAudio();
-                        const input = document.getElementById('typ-input');
-                        input.value += char;
-                    };
+                    btn.onclick = () => { initAudio(); const input = document.getElementById('typ-input'); input.value += char; };
                     rowDiv.appendChild(btn);
                 });
-
                 if (rIndex === 2) {
                     const entBtn = document.createElement('button');
-                    entBtn.className = 'bg-primary text-white rounded-lg shadow-[0_3px_0_#304bd1] font-bold px-4 py-3 active:translate-y-1 active:shadow-none text-sm';
+                    entBtn.className = 'bg-primary text-white rounded-lg font-bold px-4 py-3 active:bg-primaryHover transition-colors text-sm';
                     entBtn.innerText = 'ENTER';
-                    entBtn.onclick = () => {
-                        initAudio();
-                        handleTypingEnter();
-                    };
+                    entBtn.onclick = () => { initAudio(); handleTypingEnter(); };
                     rowDiv.appendChild(entBtn);
                 }
                 kb.appendChild(rowDiv);
@@ -827,37 +1122,31 @@
             lucide.createIcons();
         }
 
-        function initTyping() {
-            typIndex = 0;
-            renderTyping();
-        }
+        function initTyping() { typIndex = 0; renderTyping(); }
 
         function renderTyping() {
             if(typIndex >= 5) {
-                playSound('match');
-                showResult("Typing Master!", "5問のスペル入力を完了しました。");
-                return;
+                playSound('match'); showResult("Typing Completed", "5問クリアしました。", "", "win"); return;
             }
-            
+            typHintCount = 0;
             document.getElementById('typ-current').innerText = typIndex + 1;
             currentTypTarget = currentQuizData[typIndex];
             document.getElementById('typ-q').innerText = currentTypTarget.jp;
             
             const input = document.getElementById('typ-input');
             input.value = '';
-            input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-slate-200 rounded-xl mb-2 focus:border-primary focus:ring-4 focus:ring-primary/20 transition-all shadow-sm";
+            input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-slate-200 rounded-xl mb-3 focus:border-primary outline-none transition-colors bg-white text-slate-800 shadow-sm";
             input.disabled = false;
             
             document.getElementById('typ-feedback').innerHTML = '';
-            document.getElementById('typ-giveup-btn').classList.remove('hidden');
+            document.getElementById('typ-hint-btn').innerHTML = '<i data-lucide="lightbulb" class="w-4 h-4"></i> ヒント';
+            document.getElementById('typ-hint-btn').classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function initTypingListener() {
             document.getElementById('typ-input').addEventListener('keypress', function(e) {
-                if(e.key === 'Enter') {
-                    initAudio();
-                    handleTypingEnter();
-                }
+                if(e.key === 'Enter') { initAudio(); handleTypingEnter(); }
             });
         }
 
@@ -865,242 +1154,423 @@
             const input = document.getElementById('typ-input');
             if(input.disabled || !currentTypTarget) return;
             
-            // 余白除去
             const ans = input.value.replace(/\s+/g, ' ').trim().toLowerCase();
-            const correctAns = currentTypTarget.en.replace(/\[.*?\]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
-            
+            const correctAns = currentTypTarget.en.replace(/\s+/g, ' ').trim().toLowerCase();
             const feedback = document.getElementById('typ-feedback');
             
             if(ans === correctAns) {
                 playSound('correct');
-                input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-secondary bg-emerald-50 text-secondary rounded-xl mb-2 transition-all shadow-sm";
-                feedback.innerHTML = '<span class="text-secondary animate-pop flex items-center justify-start gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent!</span>';
-                document.getElementById('typ-giveup-btn').classList.add('hidden');
+                let score = parseInt(storage.getItem('wm_pro_stats_typing')||0) + 1;
+                storage.setItem('wm_pro_stats_typing', score);
+                addExp(2);
+                
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-secondary bg-emerald-50 text-secondary rounded-xl mb-3 outline-none shadow-sm";
+                feedback.innerHTML = '<span class="text-secondary animate-pop flex items-center gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent</span>';
+                document.getElementById('typ-hint-btn').classList.add('hidden');
                 lucide.createIcons();
                 input.disabled = true;
-                
                 playAudio(currentTypTarget.en);
                 setTimeout(() => { typIndex++; renderTyping(); }, 1200);
             } else {
                 playSound('wrong');
                 recordError(currentTypTarget.en);
-                input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-2 focus:border-red-500 transition-all shadow-sm";
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
                 input.classList.add('animate-pulse');
                 setTimeout(()=> input.classList.remove('animate-pulse'), 300);
-                feedback.innerHTML = '<span class="text-red-500 flex items-center justify-start gap-1"><i data-lucide="x-circle" class="w-5 h-5"></i> Try again!</span>';
+                feedback.innerHTML = '<span class="text-red-500 flex items-center gap-1"><i data-lucide="alert-circle" class="w-5 h-5"></i> Miss</span>';
                 lucide.createIcons();
                 input.value = '';
             }
         }
 
-        function handleTypingGiveUp() {
+        function handleTypingHint() {
             initAudio();
             const input = document.getElementById('typ-input');
             if (input.disabled || !currentTypTarget) return;
-
-            playSound('wrong');
-            recordError(currentTypTarget.en);
             
-            const correctAns = currentTypTarget.en.replace(/\[.*?\]/g, '').trim();
-            input.value = correctAns; 
-            input.className = "w-full max-w-md text-center text-2xl font-bold p-3 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl transition-all shadow-sm";
+            typHintCount++;
+            const cleanEn = currentTypTarget.en.trim();
+            const btn = document.getElementById('typ-hint-btn');
             
-            const feedback = document.getElementById('typ-feedback');
-            feedback.innerHTML = '<span class="text-red-600 flex items-center justify-start gap-1"><i data-lucide="info" class="w-5 h-5"></i> 正解はコチラ</span>';
-            document.getElementById('typ-giveup-btn').classList.add('hidden');
-            lucide.createIcons();
-            
-            input.disabled = true;
-            playAudio(currentTypTarget.en);
-            setTimeout(() => { typIndex++; renderTyping(); }, 2000); 
+            if (typHintCount >= 4 || typHintCount >= cleanEn.length) {
+                playSound('wrong');
+                recordError(cleanEn);
+                input.value = cleanEn; 
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
+                document.getElementById('typ-feedback').innerHTML = '<span class="text-red-600 flex items-center gap-1"><i data-lucide="info" class="w-5 h-5"></i> ギブアップ</span>';
+                btn.classList.add('hidden');
+                lucide.createIcons();
+                input.disabled = true;
+                playAudio(cleanEn);
+                setTimeout(() => { typIndex++; renderTyping(); }, 2000); 
+            } else {
+                input.value = cleanEn.substring(0, typHintCount);
+                if(typHintCount === 3 || typHintCount === cleanEn.length -1) {
+                    btn.innerHTML = '<i data-lucide="flag" class="w-4 h-4"></i> ギブアップ';
+                    lucide.createIcons();
+                }
+            }
         }
 
-        // --- 8. Matching (絶対に潰れない2Dアニメ) ---
-        let mFirstCard = null, mLock = false, mPairs = 0;
-        let mStartTime = 0, mTimerInterval;
+        // --- 8. Matching (1P & 2P) ---
+        let mFirstCard = null, mLock = false, mPairs = 0, mStartTime = 0, mTimerInterval;
         
         function initMatching(sourceData) {
+            document.getElementById('matching-grid').classList.remove('hidden');
+            document.getElementById('matching-vs-container').classList.add('hidden');
+            
             clearInterval(mTimerInterval);
             document.getElementById('match-timer').innerText = "0.0";
-            
             const grid = document.getElementById('matching-grid');
             grid.innerHTML = '';
             
             let selected = shuffle(sourceData).slice(0, 6);
-            if (selected.length < 6) {
-                const remaining = 6 - selected.length;
-                const otherWords = shuffle(wordData.filter(w => !selected.includes(w)));
-                selected = selected.concat(otherWords.slice(0, remaining));
-            }
+            if (selected.length < 6) selected = selected.concat(shuffle(wordData.filter(w => !selected.includes(w))).slice(0, 6 - selected.length));
             
             let cards = [];
-            selected.forEach(v => {
-                cards.push({ text: v.en, pair: v.jp });
-                cards.push({ text: v.jp, pair: v.en });
-            });
-            cards = shuffle(cards);
-            mPairs = 0;
+            selected.forEach(v => { cards.push({ text: v.en, pair: v.jp }); cards.push({ text: v.jp, pair: v.en }); });
+            cards = shuffle(cards); mPairs = 0;
             
             cards.forEach(c => {
                 let div = document.createElement('div');
-                div.className = 'card w-full aspect-[4/3] cursor-pointer'; 
-                div.dataset.pair = c.pair;
-                div.dataset.text = c.text;
-                
+                div.className = 'card w-full h-16 md:h-20 cursor-pointer'; 
+                div.dataset.pair = c.pair; div.dataset.text = c.text;
                 let fs = c.text.length > 10 ? 'text-xs md:text-sm' : 'text-sm md:text-base';
-                
-                div.innerHTML = `
-                    <div class="card-inner">
-                        <div class="card-front"><i data-lucide="help-circle" class="w-6 h-6 opacity-50"></i></div>
-                        <div class="card-back ${fs}">${c.text}</div>
-                    </div>
-                `;
+                div.innerHTML = `<div class="card-inner"><div class="card-front"><i data-lucide="help-circle" class="w-6 h-6 opacity-30"></i></div><div class="card-back ${fs}">${c.text}</div></div>`;
                 div.onclick = () => { initAudio(); flipMCard(div); };
                 grid.appendChild(div);
             });
             lucide.createIcons();
-            
             mStartTime = Date.now();
-            mTimerInterval = setInterval(() => {
-                let sec = ((Date.now() - mStartTime) / 1000).toFixed(1);
-                document.getElementById('match-timer').innerText = sec;
-            }, 100);
+            mTimerInterval = setInterval(() => { document.getElementById('match-timer').innerText = ((Date.now() - mStartTime) / 1000).toFixed(1); }, 100);
         }
 
         function flipMCard(el) {
             if(mLock || el === mFirstCard || el.classList.contains('matched') || el.classList.contains('flipped')) return;
             el.classList.add('flipped');
-            
             if(!mFirstCard) { mFirstCard = el; return; }
-            
             if(mFirstCard.dataset.pair === el.dataset.text) {
                 mLock = true;
                 setTimeout(() => {
                     playSound('match');
-                    mFirstCard.classList.add('matched');
-                    el.classList.add('matched');
-                    mFirstCard = null;
-                    mLock = false;
-                    mPairs++;
+                    mFirstCard.classList.add('matched'); el.classList.add('matched');
+                    mFirstCard = null; mLock = false; mPairs++;
+                    addExp(1);
                     if(mPairs === 6) clearMatching();
                 }, 300); 
             } else {
                 mLock = true;
-                setTimeout(() => {
-                    mFirstCard.classList.remove('flipped');
-                    el.classList.remove('flipped');
-                    mFirstCard = null; 
-                    mLock = false;
-                }, 800);
+                setTimeout(() => { mFirstCard.classList.remove('flipped'); el.classList.remove('flipped'); mFirstCard = null; mLock = false; }, 800);
             }
         }
 
         function clearMatching() {
             clearInterval(mTimerInterval);
             const timeStr = ((Date.now() - mStartTime) / 1000).toFixed(1);
-            const timeNum = parseFloat(timeStr);
-            
-            matchingRanks.push({ time: timeNum, date: new Date().toLocaleDateString() });
+            matchingRanks.push({ time: parseFloat(timeStr), date: new Date().toLocaleDateString() });
             matchingRanks.sort((a,b) => a.time - b.time);
-            matchingRanks = matchingRanks.slice(0, 5);
-            localStorage.setItem('wm_pro_ranks', JSON.stringify(matchingRanks));
+            matchingRanks = matchingRanks.slice(0, 10);
+            storage.setItem('wm_pro_ranks', JSON.stringify(matchingRanks));
             
-            let rankHtml = `
-                <div class="bg-blue-50 text-primary font-bold py-2 rounded-xl mb-3 text-center text-lg">
-                    ⏱️ Time: ${timeStr}s
-                </div>
-                <h4 class="font-bold text-slate-700 mb-1 text-sm">🏆 Best Times</h4>
-                <div class="space-y-1.5">
-            `;
+            let rankHtml = `<div class="bg-blue-50 text-primary font-bold py-2 rounded-xl mb-4 text-center text-lg flex justify-center items-center gap-2"><i data-lucide="timer" class="w-5 h-5"></i> ${timeStr}s</div><div class="space-y-1.5 w-full max-h-48 overflow-y-auto pr-2">`;
             matchingRanks.forEach((r, i) => {
-                let badge = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-                let isMe = r.time === timeNum ? 'bg-yellow-100 border-yellow-300' : 'bg-slate-50 border-slate-100';
-                rankHtml += `
-                    <div class="flex justify-between items-center px-3 py-1.5 border rounded-lg ${isMe}">
-                        <span class="font-bold text-slate-700 w-6 text-sm">${badge}</span>
-                        <span class="font-bold text-primary text-base">${r.time.toFixed(1)}s</span>
-                        <span class="text-[10px] text-slate-400">${r.date}</span>
-                    </div>
-                `;
+                let badge = i === 0 ? '<i data-lucide="award" class="w-4 h-4 text-yellow-500"></i>' : `<span class="text-slate-400 font-bold">${i+1}.</span>`;
+                let isMe = r.time === parseFloat(timeStr) ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100';
+                rankHtml += `<div class="flex justify-between items-center px-3 py-2 border rounded-lg ${isMe}"><span class="font-bold text-slate-500 w-6 flex justify-center">${badge}</span><span class="font-bold text-slate-800 text-sm">${r.time.toFixed(1)}s</span></div>`;
             });
             rankHtml += `</div>`;
-            
-            showResult("Clear!", "素早いマッチングでした！", rankHtml);
+            showResult("Clear!", "素早いマッチングでした", rankHtml, "win");
         }
 
-        // --- 9. Versus Screen ---
-        let vsData = [], p1Score = 0, p2Score = 0;
-        let isVsCpu = false, vsCpuTimer, vsLockAll = false;
-        let p1Locked = false, p2Locked = false;
-        let vsCurrentTarget = null;
+        let mvsFirstCard = {1: null, 2: null}, mvsLock = {1: false, 2: false}, mvsPairs = {1: 0, 2: 0};
+        function initMatchingVs(sourceData) {
+            document.getElementById('matching-grid').classList.add('hidden');
+            document.getElementById('matching-vs-container').classList.remove('hidden');
+            document.getElementById('matching-vs-container').classList.add('flex');
+            
+            clearInterval(mTimerInterval);
+            document.getElementById('match-timer').innerText = "VS";
+            document.getElementById('mvs-win-p1').classList.add('hidden'); document.getElementById('mvs-win-p2').classList.add('hidden');
+            
+            let selected = shuffle(sourceData).slice(0, 4);
+            if (selected.length < 4) selected = selected.concat(shuffle(wordData.filter(w => !selected.includes(w))).slice(0, 4 - selected.length));
+            
+            let cardsP1 = [], cardsP2 = [];
+            selected.forEach(v => {
+                cardsP1.push({ text: v.en, pair: v.jp }); cardsP1.push({ text: v.jp, pair: v.en });
+                cardsP2.push({ text: v.en, pair: v.jp }); cardsP2.push({ text: v.jp, pair: v.en });
+            });
+            cardsP1 = shuffle(cardsP1); cardsP2 = shuffle(cardsP2);
+            mvsPairs = {1: 0, 2: 0}; mvsFirstCard = {1: null, 2: null}; mvsLock = {1: false, 2: false};
+            
+            renderMvsGrid('mvs-grid-p1', cardsP1, 1);
+            renderMvsGrid('mvs-grid-p2', cardsP2, 2);
+            lucide.createIcons();
+        }
 
-        function startVsMode(isCpu) {
-            closeModal('modal-vs');
-            isVsCpu = isCpu;
-            
-            document.getElementById('screen-vs').classList.remove('hidden');
-            document.getElementById('screen-vs').classList.add('flex');
-            
-            p1Score = 0; p2Score = 0;
-            updateVsUI();
-            
-            if(isVsCpu) {
-                document.getElementById('cpu-label').classList.remove('hidden');
-                document.getElementById('cpu-label').classList.add('flex');
-                document.getElementById('vs-cpu-level-display').innerText = cpuLevel;
+        function renderMvsGrid(id, cards, player) {
+            const grid = document.getElementById(id); grid.innerHTML = '';
+            grid.className = 'grid grid-cols-2 gap-2 w-full max-w-[200px] md:max-w-xs mx-auto flex-grow content-center';
+            cards.forEach(c => {
+                let div = document.createElement('div'); div.className = 'card w-full h-14 md:h-20 cursor-pointer relative'; div.dataset.pair = c.pair; div.dataset.text = c.text;
+                let fs = c.text.length > 10 ? 'text-[10px]' : 'text-xs md:text-sm';
+                div.innerHTML = `<div class="card-inner"><div class="card-front"><i data-lucide="help-circle" class="w-4 h-4 opacity-30"></i></div><div class="card-back ${fs}">${c.text}</div></div>`;
+                div.onclick = () => { initAudio(); flipMvsCard(div, player); };
+                grid.appendChild(div);
+            });
+        }
+
+        function flipMvsCard(el, player) {
+            if(mvsLock[player] || el === mvsFirstCard[player] || el.classList.contains('matched') || el.classList.contains('flipped')) return;
+            el.classList.add('flipped');
+            if(!mvsFirstCard[player]) { mvsFirstCard[player] = el; return; }
+            if(mvsFirstCard[player].dataset.pair === el.dataset.text) {
+                mvsLock[player] = true;
+                setTimeout(() => {
+                    playSound('match');
+                    mFirstCard = mvsFirstCard[player]; // fallback ref
+                    mvsFirstCard[player].classList.add('matched'); el.classList.add('matched');
+                    mvsFirstCard[player] = null; mvsLock[player] = false; mvsPairs[player]++;
+                    if(mvsPairs[player] === 4) {
+                        playSound('correct'); addExp(5);
+                        document.getElementById(`mvs-win-p${player}`).classList.remove('hidden');
+                        document.getElementById(`mvs-win-p${player === 1 ? 2 : 1}`).innerHTML = '<div class="text-slate-500 font-bold text-xl mt-4">LOSE</div>';
+                        document.getElementById(`mvs-win-p${player === 1 ? 2 : 1}`).classList.remove('hidden');
+                        setTimeout(() => { navTo('dashboard'); }, 3000);
+                    }
+                }, 300); 
             } else {
-                document.getElementById('cpu-label').classList.add('hidden');
-                document.getElementById('cpu-label').classList.remove('flex');
+                mvsLock[player] = true;
+                setTimeout(() => { mvsFirstCard[player].classList.remove('flipped'); el.classList.remove('flipped'); mvsFirstCard[player] = null; mvsLock[player] = false; }, 800);
+            }
+        }
+        function clearMatchingVs() { }
+
+        // --- 9. Time Trial ---
+        let ttStartTime = 0, ttTimerInterval, ttSortableEn = null;
+        let ttSortables = [];
+        
+        function initTimeTrial(sourceData) {
+            const jpList = document.getElementById('tt-jp-list');
+            const dropZone = document.getElementById('tt-drop-zone');
+            const enList = document.getElementById('tt-en-list');
+            jpList.innerHTML = ''; dropZone.innerHTML = ''; enList.innerHTML = '';
+            
+            ttSortables.forEach(s => s.destroy()); ttSortables = [];
+            
+            let selected = shuffle(sourceData).slice(0, 10);
+            if(selected.length < 10) selected = selected.concat(shuffle(wordData.filter(w => !selected.includes(w))).slice(0, 10 - selected.length));
+            let enCards = shuffle([...selected]);
+            
+            selected.forEach((item, idx) => {
+                let jpEl = document.createElement('div');
+                jpEl.className = 'h-10 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center px-2 font-bold text-slate-700 text-xs md:text-sm overflow-hidden whitespace-nowrap shadow-sm';
+                jpEl.innerText = item.jp;
+                jpList.appendChild(jpEl);
+                
+                let slot = document.createElement('div');
+                slot.className = 'tt-slot h-10 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center transition-colors bg-white/50';
+                slot.dataset.index = idx;
+                dropZone.appendChild(slot);
+                ttSortables.push(new Sortable(slot, { group: { name: 'shared', put: function(to) { return to.el.children.length < 1; } }, animation: 150, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag' }));
+            });
+
+            enCards.forEach(item => {
+                let enEl = document.createElement('div');
+                enEl.className = 'h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-between px-3 font-bold text-primary text-xs md:text-sm shadow-sm cursor-grab active:cursor-grabbing hover:border-primary transition-colors';
+                enEl.dataset.en = item.en; enEl.dataset.jp = item.jp;
+                enEl.innerHTML = `<span>${item.en}</span> <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 pointer-events-none"></i>`;
+                enList.appendChild(enEl);
+            });
+            lucide.createIcons();
+            ttSortables.push(new Sortable(enList, { group: 'shared', animation: 150, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag' }));
+            
+            // Timer starts here, AFTER clearing previously
+            clearInterval(ttTimerInterval);
+            document.getElementById('tt-timer').innerText = "0.0";
+            ttStartTime = Date.now();
+            ttTimerInterval = setInterval(() => { document.getElementById('tt-timer').innerText = ((Date.now() - ttStartTime) / 1000).toFixed(1); }, 100);
+        }
+
+        function checkTimeTrial() {
+            initAudio();
+            const jpNodes = document.getElementById('tt-jp-list').children;
+            const slots = document.getElementById('tt-drop-zone').children;
+            const enList = document.getElementById('tt-en-list');
+            
+            let correctCount = 0; let toMoveBack = [];
+            
+            for(let i=0; i<10; i++) {
+                if(slots[i].children.length > 0) {
+                    let card = slots[i].children[0];
+                    if(jpNodes[i].innerText === card.dataset.jp) {
+                        correctCount++;
+                        card.classList.replace('border-slate-200', 'border-secondary');
+                        card.classList.replace('text-primary', 'text-secondary');
+                        card.classList.add('bg-emerald-50');
+                        card.classList.remove('cursor-grab', 'active:cursor-grabbing');
+                        card.style.pointerEvents = 'none';
+                    } else {
+                        toMoveBack.push(card);
+                    }
+                }
             }
             
-            // カテゴリによるデータ生成
-            let source = pendingVsCategory === "全て" ? wordData : wordData.filter(w => w.cat === pendingVsCategory);
+            if(correctCount === 10) {
+                clearInterval(ttTimerInterval); playSound('match');
+                const timeStr = ((Date.now() - ttStartTime) / 1000).toFixed(1);
+                
+                let timeNum = parseFloat(timeStr);
+                ttRanks.push({ time: timeNum, date: new Date().toLocaleDateString() });
+                ttRanks.sort((a,b) => a.time - b.time);
+                ttRanks = ttRanks.slice(0, 10);
+                storage.setItem('wm_pro_tt_ranks', JSON.stringify(ttRanks));
+                
+                let best = ttRanks[0].time;
+                storage.setItem('wm_pro_tt_best', best);
+                
+                let expBonus = Math.max(10, 100 - Math.floor(timeNum));
+                addExp(10 + expBonus);
+
+                let rankHtml = `<div class="bg-blue-50 text-primary font-bold py-2 rounded-xl mb-4 text-center text-lg flex justify-center items-center gap-2"><i data-lucide="timer" class="w-5 h-5"></i> ${timeStr}s</div><div class="space-y-1.5 w-full max-h-48 overflow-y-auto pr-2">`;
+                ttRanks.forEach((r, i) => {
+                    let badge = i === 0 ? '<i data-lucide="award" class="w-4 h-4 text-yellow-500"></i>' : `<span class="text-slate-400 font-bold">${i+1}.</span>`;
+                    let isMe = r.time === timeNum ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100';
+                    rankHtml += `<div class="flex justify-between items-center px-3 py-2 border rounded-lg ${isMe}"><span class="font-bold text-slate-500 w-6 flex justify-center">${badge}</span><span class="font-bold text-slate-800 text-sm">${r.time.toFixed(1)}s</span></div>`;
+                });
+                rankHtml += `</div>`;
+
+                showResult("Perfect Match!", "見事すべての単語を一致させました。", rankHtml, "win");
+            } else {
+                playSound('wrong');
+                toMoveBack.forEach(node => {
+                    node.classList.add('bg-red-50', 'border-red-400');
+                    setTimeout(() => node.classList.remove('bg-red-50', 'border-red-400'), 500);
+                    enList.appendChild(node);
+                });
+            }
+        }
+
+        // --- 10. Listening ---
+        let listIndex = 0, listTargets = [], listSelected = [];
+        function initListening(sourceData) { listIndex = 0; renderListening(); }
+
+        function renderListening() {
+            if(listIndex >= 3) { playSound('match'); showResult("Listening Clear", "リスニングテストをクリアしました！", "", "win"); return; }
+            document.getElementById('list-current').innerText = listIndex + 1;
+            listSelected = [null, null, null];
+            
+            let source = currentQuizData.length > 0 ? currentQuizData : wordData;
+            let pool = shuffle(source); listTargets = pool.slice(0, 3); let dummies = pool.slice(3, 6);
+            let choices = shuffle([...listTargets, ...dummies]);
+            
+            updateListSlots();
+            const cContainer = document.getElementById('list-choices'); cContainer.innerHTML = '';
+            choices.forEach(c => {
+                let btn = document.createElement('button');
+                btn.className = 'bg-white border border-slate-200 text-slate-700 font-bold py-4 rounded-xl text-sm hover:border-primary transition-colors shadow-sm truncate px-2';
+                btn.innerText = c.jp; btn.onclick = () => { initAudio(); handleListSelect(c, btn); };
+                cContainer.appendChild(btn);
+            });
+            setTimeout(() => playListeningAudio(), 500);
+        }
+
+        function updateListSlots() {
+            const slots = document.getElementById('list-slots').children;
+            for(let i=0; i<3; i++) {
+                if(listSelected[i]) {
+                    slots[i].innerText = listSelected[i].choice.jp;
+                    slots[i].className = 'w-1/3 max-w-[120px] h-14 border-2 border-primary rounded-xl flex items-center justify-center text-xs font-bold text-white bg-primary shadow-md truncate px-1 transition-all';
+                } else {
+                    slots[i].innerText = '';
+                    slots[i].className = 'w-1/3 max-w-[120px] h-14 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center bg-slate-50 transition-all';
+                }
+            }
+        }
+
+        function handleListSelect(c, btn) {
+            let emptyIndex = listSelected.indexOf(null);
+            if(emptyIndex === -1) return;
+            btn.classList.add('opacity-0', 'pointer-events-none');
+            listSelected[emptyIndex] = { choice: c, btn: btn };
+            updateListSlots();
+            if(listSelected.indexOf(null) === -1) setTimeout(checkListening, 500);
+        }
+
+        function checkListening() {
+            let allCorrect = true;
+            for(let i=0; i<3; i++) {
+                if(listSelected[i].choice.en !== listTargets[i].en) {
+                    allCorrect = false;
+                    listSelected[i].btn.classList.remove('opacity-0', 'pointer-events-none');
+                    listSelected[i] = null;
+                }
+            }
+            if(allCorrect) {
+                playSound('correct');
+                let score = parseInt(storage.getItem('wm_pro_stats_listening')||0) + 1;
+                storage.setItem('wm_pro_stats_listening', score);
+                addExp(3);
+                setTimeout(() => { listIndex++; renderListening(); }, 1000);
+            } else {
+                playSound('wrong');
+                listSelected = listSelected.filter(item => item !== null);
+                while(listSelected.length < 3) listSelected.push(null);
+                updateListSlots();
+            }
+        }
+
+        function playListeningAudio() {
+            initAudio();
+            const ripple = document.getElementById('list-ripple');
+            ripple.classList.remove('opacity-0', 'scale-50'); ripple.classList.add('opacity-50', 'scale-150');
+            function playSeq(idx) {
+                if(idx >= 3) {
+                    setTimeout(() => { ripple.classList.remove('opacity-50', 'scale-150'); ripple.classList.add('opacity-0', 'scale-50'); }, 500);
+                    return;
+                }
+                playAudio(listTargets[idx].en, () => { setTimeout(() => playSeq(idx + 1), 600); });
+            }
+            playSeq(0);
+        }
+
+        // --- 11. Versus Screen ---
+        let vsData = [], p1Score = 0, p2Score = 0, isVsCpu = false, vsCpuTimer, vsLockAll = false, p1Locked = false, p2Locked = false, vsCurrentTarget = null;
+
+        function startVsKaruta(isCpu, source) {
+            isVsCpu = isCpu; p1Score = 0; p2Score = 0; updateVsUI();
+            if(isVsCpu) {
+                document.getElementById('cpu-label').classList.remove('hidden'); document.getElementById('cpu-label').classList.add('flex');
+                if (document.getElementById('vs-cpu-level-display')) {
+                    document.getElementById('vs-cpu-level-display').innerText = cpuLevel;
+                }
+            } else {
+                document.getElementById('cpu-label').classList.add('hidden'); document.getElementById('cpu-label').classList.remove('flex');
+            }
             vsData = shuffle(source);
-            if (vsData.length < 10) {
-                const otherWords = shuffle(wordData.filter(w => !vsData.includes(w)));
-                vsData = vsData.concat(otherWords);
-            }
-            
+            if (vsData.length < 10) vsData = vsData.concat(shuffle(wordData.filter(w => !vsData.includes(w))));
             setTimeout(nextVsRound, 800);
         }
 
-        function endVsEarly() {
-            clearTimeout(vsCpuTimer);
-            document.getElementById('screen-vs').classList.add('hidden');
-            document.getElementById('screen-vs').classList.remove('flex');
-            navTo('dashboard');
-        }
-
-        function updateVsUI() {
-            document.getElementById('score-p1').innerText = p1Score;
-            document.getElementById('score-p2').innerText = p2Score;
-        }
+        function endVsEarly() { clearAllTimers(); navTo('dashboard'); }
+        function updateVsUI() { document.getElementById('score-p1').innerText = p1Score; document.getElementById('score-p2').innerText = p2Score; }
 
         function nextVsRound() {
-            vsLockAll = false;
-            p1Locked = false;
-            p2Locked = false;
-            document.getElementById('lock-p1').classList.add('hidden');
-            document.getElementById('lock-p2').classList.add('hidden');
+            vsLockAll = false; p1Locked = false; p2Locked = false;
+            document.getElementById('lock-p1').classList.add('hidden'); document.getElementById('lock-p2').classList.add('hidden');
             updateVsUI();
             
-            let numChoices = 6;
-            let cpuDelay = 3000;
-            let cpuMistakeChance = 0;
-
+            let numChoices = 6, cpuDelay = 3000, cpuMistakeChance = 0;
             if (isVsCpu) {
                 if (cpuLevel === 1) { numChoices = 6; cpuDelay = 5000; cpuMistakeChance = 0.25; }
                 else if (cpuLevel === 2) { numChoices = 6; cpuDelay = 4000; cpuMistakeChance = 0.20; }
                 else if (cpuLevel === 3) { numChoices = 8; cpuDelay = 4000; cpuMistakeChance = 0.00; }
                 else if (cpuLevel === 4) { numChoices = 8; cpuDelay = 3000; cpuMistakeChance = 0.00; }
                 else if (cpuLevel >= 5) { numChoices = 10; cpuDelay = 3000; cpuMistakeChance = 0.00; }
-            } else {
-                numChoices = 6; 
             }
             
             vsCurrentTarget = vsData[Math.floor(Math.random() * vsData.length)];
-            document.getElementById('target-p1').innerText = vsCurrentTarget.jp;
-            document.getElementById('target-p2').innerText = vsCurrentTarget.jp;
+            document.getElementById('target-p1').innerText = vsCurrentTarget.jp; document.getElementById('target-p2').innerText = vsCurrentTarget.jp;
             
             let choices = [vsCurrentTarget];
             while(choices.length < numChoices) {
@@ -1109,37 +1579,23 @@
             }
             choices = shuffle(choices);
             
-            renderVsBtn('choices-p1', choices, 1, numChoices);
-            renderVsBtn('choices-p2', choices, 2, numChoices);
+            renderVsBtn('choices-p1', choices, 1, numChoices); renderVsBtn('choices-p2', choices, 2, numChoices);
             
-            // CPUの動作ロジック（プログラムから直接関数を呼んで動かす）
             if(isVsCpu) {
                 vsCpuTimer = setTimeout(() => {
                     if(!vsLockAll && !p2Locked) {
                         const container = document.getElementById('choices-p2');
                         let targetBtn = null;
-                        
                         if (Math.random() < cpuMistakeChance) {
                             const wrongBtns = Array.from(container.children).filter(b => b.dataset.en !== vsCurrentTarget.en);
-                            if (wrongBtns.length > 0) {
-                                targetBtn = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
-                            }
+                            if (wrongBtns.length > 0) targetBtn = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
                         }
-                        
                         if (!targetBtn) {
-                            for(let btn of container.children) {
-                                if(btn.dataset.en === vsCurrentTarget.en) {
-                                    targetBtn = btn;
-                                    break;
-                                }
-                            }
+                            for(let btn of container.children) { if(btn.dataset.en === vsCurrentTarget.en) { targetBtn = btn; break; } }
                         }
-                        
-                        // プログラム側からクリックの関数を直接呼び出す（無効化されていても動く）
                         if (targetBtn) {
                             const selectedChoice = choices.find(c => c.en === targetBtn.dataset.en);
-                            initAudio();
-                            handleVsClick(selectedChoice, 2, targetBtn);
+                            initAudio(); handleVsClick(selectedChoice, 2, targetBtn);
                         }
                     }
                 }, cpuDelay);
@@ -1147,122 +1603,68 @@
         }
 
         function renderVsBtn(cId, choices, player, numChoices) {
-            const container = document.getElementById(cId);
-            container.innerHTML = '';
-            
+            const container = document.getElementById(cId); container.innerHTML = '';
             let gridCols = 'grid-cols-3';
             if (numChoices === 8) gridCols = 'grid-cols-2 md:grid-cols-4';
             if (numChoices === 10) gridCols = 'grid-cols-2 md:grid-cols-5';
             container.className = `grid gap-2 w-full max-w-xl px-2 ${gridCols}`;
 
             choices.forEach(c => {
-                let btn = document.createElement('button');
-                btn.dataset.en = c.en; 
+                let btn = document.createElement('button'); btn.dataset.en = c.en; 
+                let py = numChoices >= 8 ? 'py-2 md:py-3' : 'py-3'; let txtSize = numChoices >= 8 ? 'text-xs md:text-sm' : 'text-sm md:text-base';
                 
-                let py = numChoices >= 8 ? 'py-2 md:py-3' : 'py-3';
-                let txtSize = numChoices >= 8 ? 'text-xs md:text-sm' : 'text-sm md:text-base';
-                
-                btn.className = `bg-white border-2 border-slate-200 text-slate-800 font-bold ${py} px-1 rounded-xl ${txtSize} shadow-sm active:scale-95 transition-transform overflow-hidden break-words`;
+                btn.className = `bg-white border-2 border-slate-200 text-slate-800 font-bold ${py} px-1 rounded-xl ${txtSize} shadow-sm active:scale-95 transition-transform overflow-hidden break-words pointer-events-auto`;
                 btn.innerText = c.en;
-                
                 if(player === 2 && isVsCpu) {
-                    btn.disabled = true; // ユーザーには押せないようにする
-                    btn.className = `bg-white border-2 border-slate-200 text-slate-800 font-bold ${py} px-1 rounded-xl ${txtSize} shadow-sm cursor-default overflow-hidden break-words`;
+                    btn.disabled = true;
+                    btn.className = `bg-white border-2 border-slate-200 text-slate-800 font-bold ${py} px-1 rounded-xl ${txtSize} shadow-sm cursor-default overflow-hidden break-words pointer-events-none`;
                 }
-                
                 btn.onclick = () => { initAudio(); handleVsClick(c, player, btn); };
                 container.appendChild(btn);
             });
         }
 
         function handleVsClick(choice, player, btn) {
-            if(vsLockAll) return; 
-            if(player === 1 && p1Locked) return; 
-            if(player === 2 && p2Locked) return; 
-            
+            if(vsLockAll || (player === 1 && p1Locked) || (player === 2 && p2Locked)) return; 
             if(choice.en === vsCurrentTarget.en) {
-                playSound('correct');
-                vsLockAll = true; 
-                clearTimeout(vsCpuTimer);
-                
-                btn.classList.replace('bg-white', 'bg-secondary');
-                btn.classList.replace('border-slate-200', 'border-secondary');
-                btn.classList.replace('text-slate-800', 'text-white');
-                btn.classList.add('animate-pop');
-                
+                playSound('correct'); vsLockAll = true; clearTimeout(vsCpuTimer);
+                btn.classList.replace('bg-white', 'bg-secondary'); btn.classList.replace('border-slate-200', 'border-secondary'); btn.classList.replace('text-slate-800', 'text-white'); btn.classList.add('animate-pop');
                 if(player === 1) p1Score++; else p2Score++;
                 updateVsUI();
-                
-                if (p1Score >= 5 || p2Score >= 5) {
-                    setTimeout(endVsMatch, 1000);
-                } else {
-                    setTimeout(nextVsRound, 1000);
-                }
+                if (p1Score >= 5 || p2Score >= 5) setTimeout(endVsMatch, 1000); else setTimeout(nextVsRound, 1000);
             } else {
                 playSound('wrong');
-                btn.classList.replace('bg-white', 'bg-slate-200');
-                btn.classList.replace('text-slate-800', 'text-slate-400');
-                
-                if(player === 1) {
-                    p1Locked = true;
-                    btn.disabled = true;
-                    document.getElementById('lock-p1').classList.remove('hidden');
-                } else {
-                    p2Locked = true;
-                    // CPUボタンは元々disabledなのでクラス変更だけでOK
-                    document.getElementById('lock-p2').classList.remove('hidden');
-                }
-                
-                if(p1Locked && p2Locked) {
-                    vsLockAll = true; 
-                    clearTimeout(vsCpuTimer);
-                    setTimeout(nextVsRound, 1200);
-                }
+                btn.classList.replace('bg-white', 'bg-slate-100'); btn.classList.replace('text-slate-800', 'text-slate-400'); btn.disabled = true;
+                if(player === 1) { p1Locked = true; document.getElementById('lock-p1').classList.remove('hidden'); }
+                else { p2Locked = true; document.getElementById('lock-p2').classList.remove('hidden'); }
+                if(p1Locked && p2Locked) { vsLockAll = true; clearTimeout(vsCpuTimer); setTimeout(nextVsRound, 1200); }
             }
         }
 
         function endVsMatch() {
-            playSound('match');
-            document.getElementById('screen-vs').classList.add('hidden');
-            document.getElementById('screen-vs').classList.remove('flex');
-            
-            let title = "", desc = "", extra = "";
-            
+            playSound('match'); navTo('dashboard'); addExp(5);
+            let title = "", desc = "", extra = `
+                <div class="flex justify-center gap-6 mt-2 w-full">
+                    <div class="text-center"><div class="text-xs font-bold text-slate-400">P1 SCORE</div><div class="text-3xl font-extrabold text-primary">${p1Score}</div></div>
+                    <div class="text-center"><div class="text-xs font-bold text-slate-400">P2 SCORE</div><div class="text-3xl font-extrabold text-red-500">${p2Score}</div></div>
+                </div>`;
             if(isVsCpu) {
                 if(p1Score >= 5) {
                     title = "You Win!!";
-                    if(cpuLevel < 5) {
-                        cpuLevel++;
-                        localStorage.setItem('wm_pro_cpu', cpuLevel);
-                        document.getElementById('display-cpu-level').innerText = cpuLevel;
-                        desc = `CPUに勝利！ CPUのレベルが ${cpuLevel} に上がりました！`;
-                    } else {
-                        desc = "最強のCPUに勝利しました！";
+                    if(cpuLevel < 5) { 
+                        cpuLevel++; 
+                        storage.setItem('wm_pro_cpu', cpuLevel); 
+                        if(document.getElementById('display-cpu-level')) document.getElementById('display-cpu-level').innerText = cpuLevel; 
+                        if(document.getElementById('dash-score-vs')) document.getElementById('dash-score-vs').innerText = cpuLevel;
+                        desc = `CPUレベルが ${cpuLevel} に上がりました！`; 
                     }
-                } else {
-                    title = "You Lose...";
-                    desc = "CPUの勝利です。次は勝てるはず！";
-                }
+                    else { desc = "最強のCPUに勝利しました！"; }
+                } else { title = "You Lose..."; desc = "CPUの勝利です。次は勝てるはず！"; }
             } else {
-                if(p1Score >= 5) title = "Player 1 Wins!";
-                else title = "Player 2 Wins!";
+                if(p1Score >= 5) title = "Player 1 Wins!"; else title = "Player 2 Wins!";
                 desc = "白熱のバトルでした！";
             }
-            
-            extra = `
-                <div class="flex justify-center gap-6 mt-2">
-                    <div class="text-center">
-                        <div class="text-xs font-bold text-slate-400">P1 SCORE</div>
-                        <div class="text-3xl font-extrabold text-primary">${p1Score}</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-xs font-bold text-slate-400">P2 SCORE</div>
-                        <div class="text-3xl font-extrabold text-red-500">${p2Score}</div>
-                    </div>
-                </div>
-            `;
-            
-            showResult(title, desc, extra);
+            showResult(title, desc, extra, "vs");
         }
     </script>
 </body>

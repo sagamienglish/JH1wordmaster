@@ -636,7 +636,7 @@
             {en: "favorite", jp: "お気に入りの", cat: "Lesson 2"}, {en: "song", jp: "歌", cat: "Lesson 2"},
             {en: "it", jp: "それは、それが", cat: "Lesson 2"}, {en: "please", jp: "どうぞ、お願いします", cat: "Lesson 2"},
             {en: "teach", jp: "教える", cat: "Lesson 2"}, {en: "sure", jp: "もちろん、はい", cat: "Lesson 2"},
-            {en: "piece", jp: "ひকথ,（将棋などの）駒", cat: "Lesson 2"}, {en: "move", jp: "動く", cat: "Lesson 2"},
+            {en: "piece", jp: "ひとかけら、（将棋などの）駒", cat: "Lesson 2"}, {en: "move", jp: "動く", cat: "Lesson 2"},
             {en: "space", jp: "場所、空間", cat: "Lesson 2"}, {en: "forward", jp: "前へ", cat: "Lesson 2"},
             {en: "uncle", jp: "おじ", cat: "Lesson 2"}, {en: "language", jp: "言語、ことば", cat: "Lesson 2"},
             {en: "his", jp: "彼の", cat: "Lesson 2"}, {en: "speak", jp: "（ある言語を）話す", cat: "Lesson 2"},
@@ -681,6 +681,7 @@
         let staminaTime = parseInt(storage.getItem('wm_pro_stamina_time'));
         if(isNaN(staminaTime)) staminaTime = Date.now();
         let totalExp = parseInt(storage.getItem('wm_pro_exp')) || 0;
+        let activeScreen = 'dashboard';
 
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
@@ -689,9 +690,11 @@
             try { updateDashboardScores(); } catch(e) {}
             
             setInterval(() => {
-                totalSeconds++;
-                storage.setItem('wm_pro_sec', totalSeconds.toString());
-                if(totalSeconds % 60 === 0) updateTimeUI();
+                if (activeScreen !== 'dashboard' && activeScreen !== 'vocabulary') {
+                    totalSeconds++;
+                    storage.setItem('wm_pro_sec', totalSeconds.toString());
+                    if(totalSeconds % 60 === 0) updateTimeUI();
+                }
                 updateStaminaLogic();
             }, 1000);
             
@@ -711,11 +714,11 @@
             const themes = [
                 { id: 'default', name: 'デフォルト', req: 0, bg: '#F4F7F9', border: '#3B5EE8' },
                 { id: 'pistachio', name: 'クラッシュ・ピスタチオ', req: 0, bg: '#E8F5E9', border: '#38A169' },
-                { id: 'lavender', name: 'シャイニー・ラベンダー', req: 100, bg: '#F3E8FF', border: '#805AD5' },
-                { id: 'sky', name: 'スカイ・ウォッシュ', req: 200, bg: '#E0F2FE', border: '#0284C7' },
-                { id: 'apricot', name: 'ジューシー・アプリコット', req: 300, bg: '#FFEDD5', border: '#EA580C' },
-                { id: 'cyan', name: 'ネオ・シアン・ミント', req: 400, bg: '#CCFBF1', border: '#0D9488' },
-                { id: 'cyber', name: 'ディープ・サイバー・ナイト', req: 500, bg: '#0E1525', border: '#6366F1' }
+                { id: 'lavender', name: 'シャイニー・ラベンダー', req: 200, bg: '#F3E8FF', border: '#805AD5' },
+                { id: 'sky', name: 'スカイ・ウォッシュ', req: 400, bg: '#E0F2FE', border: '#0284C7' },
+                { id: 'apricot', name: 'ジューシー・アプリコット', req: 600, bg: '#FFEDD5', border: '#EA580C' },
+                { id: 'cyan', name: 'ネオ・シアン・ミント', req: 800, bg: '#CCFBF1', border: '#0D9488' },
+                { id: 'cyber', name: 'ディープ・サイバー・ナイト', req: 1000, bg: '#0E1525', border: '#6366F1' }
             ];
             themes.forEach(t => {
                 let isUnlocked = totalExp >= t.req;
@@ -848,6 +851,7 @@
         }
 
         function navTo(tab) {
+            activeScreen = tab;
             clearAllTimers();
             document.querySelectorAll('.screen').forEach(s => { s.classList.add('hidden'); s.classList.remove('flex'); });
             const targetScreen = document.getElementById('screen-' + tab);
@@ -914,7 +918,7 @@
                                 <button onclick="setWordStatus('${w.en}', 't')" class="${btnClass} ${tClass}">△</button>
                                 <button onclick="setWordStatus('${w.en}', 'x')" class="${btnClass} ${xClass}">×</button>
                             </div>
-                            <button onclick="initAudio(); playAudio('${w.en}')" class="p-1.5 text-slate-400 hover:text-primary rounded-full hover:bg-slate-50 transition-colors bg-slate-50"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                            <button onclick="initAudio(); playAudio('${w.en}')" class="p-1.5 text-slate-300 hover:text-primary rounded-full hover:bg-slate-50 transition-colors bg-slate-50"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -1009,10 +1013,10 @@
                     <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-4">難易度</label>
                     <div class="flex gap-2">
                         <label class="flex-1 bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
-                            <input type="radio" name="opt_typing_diff" value="easy" class="accent-primary"> Easy (穴埋め)
+                            <input type="radio" name="opt_typing_diff" value="easy" class="accent-primary" checked> Easy (穴埋め)
                         </label>
                         <label class="flex-1 bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
-                            <input type="radio" name="opt_typing_diff" value="hard" class="accent-primary" checked> Hard (通常)
+                            <input type="radio" name="opt_typing_diff" value="hard" class="accent-primary"> Hard (通常)
                         </label>
                     </div>
                 `;
@@ -1062,8 +1066,7 @@
                 let count = parseInt(storage.getItem('wm_pro_stats_matching_count')||0) + 1;
                 storage.setItem('wm_pro_stats_matching_count', count);
                 const players = document.querySelector('input[name="opt_player"]:checked').value;
-                navTo('matching');
-                if(players === '1') { initMatching(source); } else { initMatchingVs(source); }
+                if(players === '1') { navTo('matching'); initMatching(source); } else { navTo('matching-vs'); initMatchingVs(source); }
             } else if (pendingMode === 'vs') {
                 let count = parseInt(storage.getItem('wm_pro_stats_vs_count')||0) + 1;
                 storage.setItem('wm_pro_stats_vs_count', count);
@@ -1207,7 +1210,12 @@
             let indices = shuffle(validIndices).slice(0, hideCount).sort((a,b) => a-b);
             let displayArr = cleanWord.split(''); let ans = '';
             for(let i of indices) { ans += displayArr[i]; displayArr[i] = '_'; }
-            return { display: displayArr.join(' '), ans: ans.toLowerCase(), fullWord: cleanWord, displayArr: displayArr, indices: indices };
+            
+            for(let i=0; i<displayArr.length; i++) {
+                if (displayArr[i] === ' ') displayArr[i] = '&nbsp;&nbsp;'; // スペースを広く確保
+            }
+            
+            return { display: displayArr.join(''), ans: ans.toLowerCase(), fullWord: cleanWord, displayArr: displayArr, indices: indices };
         }
 
         function updateEasyDisplay() {
@@ -1223,7 +1231,7 @@
                     } else { displayArr[i] = '_'; }
                 }
             }
-            document.getElementById('typ-easy-hint-container').innerHTML = `<div class="text-3xl font-mono font-bold tracking-widest text-primary mb-4 bg-blue-50 py-3 px-6 rounded-xl inline-block border border-blue-100">${displayArr.join(' ')}</div>`;
+            document.getElementById('typ-easy-hint-container').innerHTML = `<div class="text-3xl font-mono font-bold tracking-widest text-primary mb-4 bg-blue-50 py-3 px-6 rounded-xl inline-block border border-blue-100">${displayArr.join('')}</div>`;
         }
 
         function initTyping() { typIndex = 0; renderTyping(); }

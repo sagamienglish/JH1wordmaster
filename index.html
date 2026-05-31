@@ -15,9 +15,9 @@
             --color-primaryHover: #304BD1;
             --color-background: #F4F7F9;
             --color-surface: #FFFFFF;
-            --color-text-main: #1e293b; /* slate-800 */
-            --color-text-muted: #64748b; /* slate-500 */
-            --color-border: #e2e8f0; /* slate-200 */
+            --color-text-main: #1e293b;
+            --color-text-muted: #64748b;
+            --color-border: #e2e8f0;
             --color-slate-50: #f8fafc;
             --color-slate-100: #f1f5f9;
         }
@@ -162,7 +162,8 @@
         </nav>
         
         <div class="mt-auto pt-4 border-t border-slate-100">
-            <button onclick="showModal('modal-theme')" class="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-slate-200 text-slate-500 hover:text-primary transition-colors font-bold text-sm mb-4">
+            <!-- テーマボタン -->
+            <button onclick="openThemeModal()" class="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-slate-200 text-slate-500 hover:text-primary transition-colors font-bold text-sm mb-4">
                 <i data-lucide="palette" class="w-4 h-4"></i> テーマ変更
             </button>
         </div>
@@ -275,7 +276,11 @@
         <!-- ================= 2. Vocabulary List Screen ================= -->
         <div id="screen-vocabulary" class="screen hidden flex-col p-6 md:p-8 max-w-6xl mx-auto min-h-full">
             <h2 class="text-2xl font-extrabold text-slate-800 mb-2">語彙リスト</h2>
-            <p class="text-slate-500 text-sm mb-6 font-medium flex items-center gap-1"><i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>マークは過去に間違えた苦手な単語です。</p>
+            <div class="flex items-center gap-4 mb-6 text-sm text-slate-500">
+                <span class="flex items-center gap-1"><div class="w-3 h-3 bg-green-100 border border-green-500 rounded-full"></div> 覚えた</span>
+                <span class="flex items-center gap-1"><div class="w-3 h-3 bg-yellow-100 border border-yellow-500 rounded-full"></div> あやふや</span>
+                <span class="flex items-center gap-1"><div class="w-3 h-3 bg-red-100 border border-red-500 rounded-full"></div> わからない</span>
+            </div>
             <div id="vocab-container" class="w-full"></div>
         </div>
 
@@ -304,7 +309,10 @@
             
             <div class="flex-grow flex flex-col items-center justify-start pt-4 w-full">
                 <div class="text-slate-400 mb-2 font-bold uppercase tracking-wider text-xs">Translate to English</div>
-                <div id="typ-q" class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-8 text-center"></div>
+                <div id="typ-q" class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-4 text-center"></div>
+                
+                <!-- Easy Mode Hint Container -->
+                <div id="typ-easy-hint-container" class="text-center w-full"></div>
                 
                 <input type="text" id="typ-input" placeholder="type here..." autocomplete="off" spellcheck="false"
                     class="w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-slate-200 rounded-xl mb-3 focus:border-primary outline-none transition-colors bg-surface text-slate-800">
@@ -334,7 +342,7 @@
                 <div id="matching-vs-container" class="hidden w-full flex-row gap-4 h-full max-h-[70vh]">
                     <div class="flex-1 flex flex-col bg-slate-50 p-4 rounded-2xl border border-slate-200 relative">
                         <div class="text-center font-bold text-primary mb-3"><i data-lucide="user" class="inline w-4 h-4"></i> Player 1</div>
-                        <div id="mvs-grid-p1" class="grid grid-cols-2 gap-2 flex-grow content-center"></div>
+                        <div id="mvs-grid-p1" class="grid grid-cols-2 gap-2 flex-grow content-start"></div>
                         <div id="mvs-win-p1" class="hidden absolute inset-0 bg-surface/90 flex flex-col items-center justify-center z-10 rounded-2xl backdrop-blur-sm">
                             <i data-lucide="check-circle" class="w-12 h-12 text-primary mb-2"></i>
                             <span class="text-2xl font-extrabold text-slate-800">WIN!</span>
@@ -343,7 +351,7 @@
                     <div class="w-1 bg-slate-200 rounded-full"></div>
                     <div class="flex-1 flex flex-col bg-slate-50 p-4 rounded-2xl border border-slate-200 relative">
                         <div class="text-center font-bold text-red-500 mb-3"><i data-lucide="user" class="inline w-4 h-4"></i> Player 2</div>
-                        <div id="mvs-grid-p2" class="grid grid-cols-2 gap-2 flex-grow content-center"></div>
+                        <div id="mvs-grid-p2" class="grid grid-cols-2 gap-2 flex-grow content-start"></div>
                         <div id="mvs-win-p2" class="hidden absolute inset-0 bg-surface/90 flex flex-col items-center justify-center z-10 rounded-2xl backdrop-blur-sm">
                             <i data-lucide="check-circle" class="w-12 h-12 text-red-500 mb-2"></i>
                             <span class="text-2xl font-extrabold text-slate-800">WIN!</span>
@@ -415,14 +423,13 @@
         <button onclick="navTo('vocabulary')" id="mob-vocabulary" class="flex flex-col items-center p-2 text-slate-400">
             <i data-lucide="library" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Words</span>
         </button>
-        <button onclick="showModal('modal-theme')" class="flex flex-col items-center p-2 text-slate-400">
+        <button onclick="openThemeModal()" class="flex flex-col items-center p-2 text-slate-400">
             <i data-lucide="palette" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Theme</span>
         </button>
     </nav>
 
     <!-- ================= 8. VS Screen (Karuta) ================= -->
     <div id="screen-vs" class="hidden screen">
-        <!-- 確実に押せるように最前面＆独立して配置した終了ボタン -->
         <button onclick="endVsEarly()" class="vs-close-btn absolute left-4 top-1/2 -translate-y-1/2 bg-slate-800 text-white p-3 rounded-full hover:bg-slate-700 z-[100] transition-colors shadow-xl cursor-pointer border-2 border-slate-600 flex items-center justify-center"><i data-lucide="x" class="w-6 h-6"></i></button>
 
         <div class="vs-half vs-top" id="vs-player2">
@@ -477,29 +484,7 @@
                 <h2 class="text-xl font-extrabold text-slate-800 flex items-center gap-2"><i data-lucide="palette" class="w-5 h-5 text-primary"></i> テーマ設定</h2>
                 <button onclick="closeModal('modal-theme')" class="text-slate-400 hover:text-slate-600 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            <div class="grid grid-cols-1 gap-2">
-                <button onclick="applyTheme('default')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
-                    <div class="w-5 h-5 rounded-full bg-[#F4F7F9] border-2 border-[#3B5EE8]"></div> <span class="text-sm font-bold text-slate-700">デフォルト</span>
-                </button>
-                <button onclick="applyTheme('pistachio')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
-                    <div class="w-5 h-5 rounded-full bg-[#E8F5E9] border-2 border-[#38A169]"></div> <span class="text-sm font-bold text-slate-700">クラッシュ・ピスタチオ</span>
-                </button>
-                <button onclick="applyTheme('lavender')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
-                    <div class="w-5 h-5 rounded-full bg-[#F3E8FF] border-2 border-[#805AD5]"></div> <span class="text-sm font-bold text-slate-700">シャイニー・ラベンダー</span>
-                </button>
-                <button onclick="applyTheme('sky')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
-                    <div class="w-5 h-5 rounded-full bg-[#E0F2FE] border-2 border-[#0284C7]"></div> <span class="text-sm font-bold text-slate-700">スカイ・ウォッシュ</span>
-                </button>
-                <button onclick="applyTheme('apricot')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
-                    <div class="w-5 h-5 rounded-full bg-[#FFEDD5] border-2 border-[#EA580C]"></div> <span class="text-sm font-bold text-slate-700">ジューシー・アプリコット</span>
-                </button>
-                <button onclick="applyTheme('cyan')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white">
-                    <div class="w-5 h-5 rounded-full bg-[#CCFBF1] border-2 border-[#0D9488]"></div> <span class="text-sm font-bold text-slate-700">ネオ・シアン・ミント</span>
-                </button>
-                <button onclick="applyTheme('cyber')" class="flex items-center gap-3 p-3 rounded-xl border border-slate-600 hover:border-indigo-500 transition-colors bg-slate-800 text-white">
-                    <div class="w-5 h-5 rounded-full bg-[#0E1525] border-2 border-[#6366F1]"></div> <span class="text-sm font-bold text-white">ディープ・サイバー・ナイト</span>
-                </button>
-            </div>
+            <div id="theme-list" class="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto"></div>
         </div>
     </div>
 
@@ -515,7 +500,7 @@
 
     <!-- ================= JavaScript ================= -->
     <script>
-        // --- Safe Storage Wrapper (フォールバック機能) ---
+        // --- Storage Wrapper ---
         const storageMock = (() => {
             let store = {};
             return {
@@ -537,7 +522,7 @@
             storage = storageMock;
         }
 
-        // --- 0. Web Audio API ---
+        // --- Audio ---
         let audioCtx = null;
         function initAudio() {
             if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -566,7 +551,7 @@
             }
         }
 
-        // --- 1. Data Parsing (151 words) ---
+        // --- Data ---
         const rawWords = [
             {en: "sport", jp: "スポーツ", cat: "My Dictionary 3"}, {en: "badminton", jp: "バドミントン", cat: "My Dictionary 3"},
             {en: "baseball", jp: "野球", cat: "My Dictionary 3"}, {en: "basketball", jp: "バスケットボール", cat: "My Dictionary 3"},
@@ -651,22 +636,12 @@
         });
         const categories = ["全て", ...new Set(wordData.map(w => w.cat))];
 
-        // --- Theme Init ---
-        const savedTheme = storage.getItem('wm_pro_theme') || 'default';
-        applyTheme(savedTheme);
-
-        function applyTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            storage.setItem('wm_pro_theme', theme);
-            closeModal('modal-theme');
-        }
-
-        // --- 2. State & Storage ---
-        let totalSeconds = parseInt(storage.getItem('wm_pro_sec'));
-        if (isNaN(totalSeconds)) totalSeconds = 0;
+        // --- State & Storage ---
+        let totalSeconds = parseInt(storage.getItem('wm_pro_sec')) || 0;
         let lastLogin = storage.getItem('wm_pro_date');
         let streak = parseInt(storage.getItem('wm_pro_streak')) || 1;
         let errors = JSON.parse(storage.getItem('wm_pro_errors')) || {};
+        let wordStatus = JSON.parse(storage.getItem('wm_pro_word_status')) || {}; // o, t, x
         let matchingRanks = JSON.parse(storage.getItem('wm_pro_ranks')) || [];
         let ttRanks = JSON.parse(storage.getItem('wm_pro_tt_ranks')) || [];
         let cpuLevel = parseInt(storage.getItem('wm_pro_cpu')) || 1;
@@ -681,9 +656,7 @@
             lucide.createIcons();
             checkLogin();
             updateTimeUI();
-            
-            // 安全なダッシュボード更新処理（エラー回避）
-            try { updateDashboardScores(); } catch(e) { console.error(e); }
+            updateDashboardScores();
             
             setInterval(() => {
                 totalSeconds++;
@@ -692,14 +665,51 @@
                 updateStaminaLogic();
             }, 1000);
             
-            if (document.getElementById('display-cpu-level')) {
-                document.getElementById('display-cpu-level').innerText = cpuLevel;
-            }
+            if (document.getElementById('display-cpu-level')) document.getElementById('display-cpu-level').innerText = cpuLevel;
             renderVocabulary();
             renderKeyboard();
             initTypingListener();
-            populateCategorySelect();
+            
+            const savedTheme = storage.getItem('wm_pro_theme') || 'default';
+            applyTheme(savedTheme);
         });
+
+        // Theme System with EXP Unlock
+        function openThemeModal() {
+            const list = document.getElementById('theme-list');
+            list.innerHTML = '';
+            const themes = [
+                { id: 'default', name: 'デフォルト', req: 0, bg: '#F4F7F9', border: '#3B5EE8' },
+                { id: 'pistachio', name: 'クラッシュ・ピスタチオ', req: 0, bg: '#C9E8C9', border: '#2F855A' },
+                { id: 'lavender', name: 'シャイニー・ラベンダー', req: 100, bg: '#E0CCFF', border: '#6B46C1' },
+                { id: 'sky', name: 'スカイ・ウォッシュ', req: 200, bg: '#C6E3FB', border: '#2B6CB0' },
+                { id: 'apricot', name: 'ジューシー・アプリコット', req: 300, bg: '#FFE0CC', border: '#C05621' },
+                { id: 'cyan', name: 'ネオ・シアン・ミント', req: 400, bg: '#B5F2EB', border: '#285E61' },
+                { id: 'cyber', name: 'ディープ・サイバー・ナイト', req: 500, bg: '#0E1525', border: '#6366F1' }
+            ];
+            
+            themes.forEach(t => {
+                let isUnlocked = totalExp >= t.req;
+                let btn = document.createElement('button');
+                if(isUnlocked) {
+                    btn.className = "flex justify-between items-center w-full p-3 rounded-xl border border-slate-200 hover:border-primary transition-colors bg-white group";
+                    btn.innerHTML = `<div class="flex items-center gap-3"><div class="w-5 h-5 rounded-full border-2" style="background:${t.bg}; border-color:${t.border}"></div> <span class="text-sm font-bold text-slate-700">${t.name}</span></div> <i data-lucide="check" class="w-4 h-4 text-white group-hover:text-slate-300"></i>`;
+                    btn.onclick = () => applyTheme(t.id);
+                } else {
+                    btn.className = "flex justify-between items-center w-full p-3 rounded-xl border border-slate-100 bg-slate-50 cursor-not-allowed opacity-60";
+                    btn.innerHTML = `<div class="flex items-center gap-3"><div class="w-5 h-5 rounded-full border-2 border-slate-300 bg-slate-200"></div> <span class="text-sm font-bold text-slate-400">${t.name}</span></div> <div class="flex items-center gap-1 text-xs font-bold text-slate-400"><i data-lucide="lock" class="w-3 h-3"></i> ${t.req} EXP</div>`;
+                }
+                list.appendChild(btn);
+            });
+            lucide.createIcons();
+            showModal('modal-theme');
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            storage.setItem('wm_pro_theme', theme);
+            closeModal('modal-theme');
+        }
 
         function checkLogin() {
             const today = new Date().toDateString();
@@ -776,7 +786,6 @@
 
         function updateDashboardScores() {
             if(!document.getElementById('dash-score-4choice')) return;
-            
             document.getElementById('exp-count').innerText = totalExp;
             document.getElementById('dash-score-4choice').innerText = storage.getItem('wm_pro_stats_4choice') || 0;
             document.getElementById('dash-score-typing').innerText = storage.getItem('wm_pro_stats_typing') || 0;
@@ -800,7 +809,7 @@
             renderVocabulary();
         }
 
-        // --- 3. Utils & Navigation ---
+        // --- Utils ---
         function shuffle(array) { return array.slice().sort(() => Math.random() - 0.5); }
         function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -815,9 +824,7 @@
 
         function navTo(tab) {
             clearAllTimers();
-            document.querySelectorAll('.screen').forEach(s => {
-                s.classList.add('hidden'); s.classList.remove('flex');
-            });
+            document.querySelectorAll('.screen').forEach(s => { s.classList.add('hidden'); s.classList.remove('flex'); });
             const targetScreen = document.getElementById('screen-' + tab);
             targetScreen.classList.remove('hidden'); targetScreen.classList.add('flex');
             
@@ -845,7 +852,7 @@
         }
         function replayAudio() { if(lastUtterance) playAudio(lastUtterance); }
 
-        // --- 4. Vocabulary List ---
+        // --- Vocabulary List ---
         function renderVocabulary() {
             const container = document.getElementById('vocab-container');
             container.innerHTML = '';
@@ -858,22 +865,30 @@
                 section.innerHTML = `<h3 class="text-sm font-bold text-slate-400 border-b border-slate-100 pb-2 mb-3 uppercase tracking-wider">${cat}</h3>`;
                 
                 const grid = document.createElement('div');
-                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2";
+                grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2";
                 
                 catWords.forEach(w => {
-                    const errCount = errors[w.en] || 0;
-                    const errBadge = errCount > 0 ? `<div class="bg-red-50 text-red-500 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5"><i data-lucide="alert-circle" class="w-3 h-3"></i> ${errCount}</div>` : '';
+                    const status = wordStatus[w.en] || 'none';
+                    const oClass = status === 'o' ? 'bg-green-100 border-green-500 text-green-700' : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50';
+                    const tClass = status === 't' ? 'bg-yellow-100 border-yellow-500 text-yellow-700' : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50';
+                    const xClass = status === 'x' ? 'bg-red-100 border-red-500 text-red-700' : 'bg-white border-slate-200 text-slate-400 hover:bg-slate-50';
                     
+                    const btnClass = "w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] transition-colors border";
+
                     const card = document.createElement('div');
-                    card.className = "bg-white rounded-xl p-3 border border-slate-200 hover:border-primary transition-colors flex justify-between items-center group";
+                    card.className = "bg-white rounded-xl p-3 border border-slate-200 flex justify-between items-center group shadow-sm";
                     card.innerHTML = `
-                        <div class="flex flex-col truncate pr-2">
+                        <div class="flex flex-col truncate pr-2 flex-1">
                             <span class="text-sm font-bold text-slate-800 truncate">${w.en}</span>
                             <span class="text-xs text-slate-500 truncate">${w.jp}</span>
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
-                            ${errBadge}
-                            <button onclick="initAudio(); playAudio('${w.en}')" class="p-1.5 text-slate-300 hover:text-primary rounded-full hover:bg-slate-50 transition-colors"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                            <div class="flex items-center gap-1 mr-1">
+                                <button onclick="setWordStatus('${w.en}', 'o')" class="${btnClass} ${oClass}">◯</button>
+                                <button onclick="setWordStatus('${w.en}', 't')" class="${btnClass} ${tClass}">△</button>
+                                <button onclick="setWordStatus('${w.en}', 'x')" class="${btnClass} ${xClass}">×</button>
+                            </div>
+                            <button onclick="initAudio(); playAudio('${w.en}')" class="p-1.5 text-slate-300 hover:text-primary rounded-full hover:bg-slate-50 transition-colors bg-slate-50"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
                         </div>
                     `;
                     grid.appendChild(card);
@@ -884,11 +899,16 @@
             lucide.createIcons();
         }
 
-        // --- 5. Setup Modal Management ---
+        function setWordStatus(word, stat) {
+            if(wordStatus[word] === stat) delete wordStatus[word]; 
+            else wordStatus[word] = stat;
+            storage.setItem('wm_pro_word_status', JSON.stringify(wordStatus));
+            renderVocabulary();
+        }
+
+        // --- Setup Modal ---
         let pendingMode = '';
         let selectedSetupCategory = "全て";
-
-        function populateCategorySelect() {} // 互換性維持
 
         function renderCategoryButtons() {
             const list = document.getElementById('setup-category-buttons');
@@ -913,24 +933,41 @@
             const container = document.getElementById('setup-options-container');
             container.innerHTML = '';
             
+            if (mode !== 'vs') {
+                container.innerHTML += `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-4">絞り込み (◯△×)</label>
+                    <div class="flex gap-2 mb-2">
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-1 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
+                            <input type="radio" name="opt_filter" value="all" class="accent-primary" checked> すべて
+                        </label>
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-1 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
+                            <input type="radio" name="opt_filter" value="tx" class="accent-primary"> △と×
+                        </label>
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-1 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
+                            <input type="radio" name="opt_filter" value="x" class="accent-primary"> ×のみ
+                        </label>
+                    </div>
+                `;
+            }
+
             if (mode === '4choice') {
-                container.innerHTML = `
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-5">出題形式</label>
+                container.innerHTML += `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-4">出題形式</label>
                     <div class="flex gap-2">
-                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
                             <input type="radio" name="opt_direction" value="jp-en" class="accent-primary" checked> 日 → 英
                         </label>
-                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
                             <input type="radio" name="opt_direction" value="en-jp" class="accent-primary"> 英 → 日
                         </label>
-                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
                             <input type="radio" name="opt_direction" value="random" class="accent-primary"> ランダム
                         </label>
                     </div>
                 `;
             } else if (mode === 'matching' || mode === 'vs') {
-                container.innerHTML = `
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-5">対戦相手</label>
+                container.innerHTML += `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-4">対戦相手</label>
                     <div class="flex gap-2">
                         <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm">
                             <i data-lucide="${mode === 'vs' ? 'bot' : 'user'}" class="w-5 h-5 text-slate-600"></i>
@@ -942,7 +979,20 @@
                         </label>
                     </div>
                 `;
+            } else if (mode === 'typing') {
+                container.innerHTML += `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-4">難易度</label>
+                    <div class="flex gap-2">
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
+                            <input type="radio" name="opt_typing_diff" value="easy" class="accent-primary"> Easy (穴埋め)
+                        </label>
+                        <label class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs">
+                            <input type="radio" name="opt_typing_diff" value="hard" class="accent-primary" checked> Hard (通常)
+                        </label>
+                    </div>
+                `;
             }
+
             lucide.createIcons();
             showModal('modal-setup');
         }
@@ -951,10 +1001,31 @@
         let currentOptions = {};
 
         function confirmSetup() {
+            let source = selectedSetupCategory === "全て" ? wordData : wordData.filter(w => w.cat === selectedSetupCategory);
+            
+            if(pendingMode !== 'vs') {
+                const filter = document.querySelector('input[name="opt_filter"]:checked').value;
+                if(filter === 'tx') {
+                    source = source.filter(w => wordStatus[w.en] === 't' || wordStatus[w.en] === 'x');
+                } else if(filter === 'x') {
+                    source = source.filter(w => wordStatus[w.en] === 'x');
+                }
+                
+                let req = 5;
+                if(pendingMode === 'matching') req = 6;
+                if(pendingMode === 'timetrial') req = 10;
+                if(pendingMode === 'listening') req = 6;
+                
+                if(source.length < req) {
+                    closeModal('modal-setup');
+                    showResult("単語が足りません", `絞り込み条件に合う単語が ${req} 個以上必要です。（現在: ${source.length}個）<br>別の条件を選択してください。`, "", "info");
+                    return;
+                }
+            }
+
             if(!useStamina()) { closeModal('modal-setup'); return; }
             closeModal('modal-setup');
             
-            let source = selectedSetupCategory === "全て" ? wordData : wordData.filter(w => w.cat === selectedSetupCategory);
             currentQuizData = shuffle(source);
             
             if (pendingMode === '4choice') {
@@ -963,6 +1034,7 @@
                 navTo('4choice');
                 init4Choice();
             } else if (pendingMode === 'typing') {
+                currentOptions.typingDifficulty = document.querySelector('input[name="opt_typing_diff"]:checked').value;
                 currentQuizData = currentQuizData.slice(0, 5);
                 navTo('typing');
                 initTyping();
@@ -972,18 +1044,19 @@
                 const players = document.querySelector('input[name="opt_player"]:checked').value;
                 
                 navTo('matching');
-                
                 if(players === '1') { initMatching(source); }
                 else { initMatchingVs(source); }
             } else if (pendingMode === 'vs') {
                 let count = parseInt(storage.getItem('wm_pro_stats_vs_count')||0) + 1;
                 storage.setItem('wm_pro_stats_vs_count', count);
                 const isCpu = document.querySelector('input[name="opt_player"]:checked').value === '1';
+                
                 navTo('vs');
                 startVsKaruta(isCpu, source);
             } else if (pendingMode === 'timetrial') {
                 let count = parseInt(storage.getItem('wm_pro_stats_tt_count')||0) + 1;
                 storage.setItem('wm_pro_stats_tt_count', count);
+                
                 navTo('timetrial');
                 initTimeTrial(source);
             } else if (pendingMode === 'listening') {
@@ -994,7 +1067,7 @@
 
         function showResult(title, desc, extraHtml = '', type = 'win') {
             document.getElementById('res-title').innerText = title;
-            document.getElementById('res-desc').innerText = desc;
+            document.getElementById('res-desc').innerHTML = desc;
             document.getElementById('res-extra').innerHTML = extraHtml;
             
             const iconBox = document.getElementById('res-icon');
@@ -1040,17 +1113,15 @@
             }
             
             let choices = [target];
-            while(choices.length < 4) {
-                let r = wordData[Math.floor(Math.random() * wordData.length)];
-                if(!choices.includes(r)) choices.push(r);
-            }
+            let pool = shuffle(wordData).filter(w => w.en !== target.en);
+            choices = choices.concat(pool.slice(0, 3));
             choices = shuffle(choices);
             
             const container = document.getElementById('qc-choices');
             container.innerHTML = '';
             choices.forEach(c => {
                 let btn = document.createElement('button');
-                btn.className = 'w-full bg-white border border-slate-200 text-slate-700 font-bold py-5 rounded-xl text-lg hover:border-primary transition-colors shadow-sm';
+                btn.className = 'w-full bg-white border border-slate-200 text-slate-700 font-bold py-5 rounded-xl text-lg btn-elegant shadow-sm';
                 btn.innerText = isEnToJp ? c.jp : c.en;
                 
                 btn.onclick = function() {
@@ -1072,7 +1143,7 @@
                         }
                     } else {
                         playSound('wrong');
-                        btn.className = 'w-full bg-slate-50 border-slate-100 text-slate-400 font-bold py-5 rounded-xl text-lg pointer-events-none';
+                        btn.className = 'w-full bg-slate-50 border-slate-100 text-slate-300 font-bold py-5 rounded-xl text-lg pointer-events-none';
                         recordError(target.en);
                         document.getElementById('qc-text').classList.add('animate-pulse');
                         setTimeout(()=> document.getElementById('qc-text').classList.remove('animate-pulse'), 300);
@@ -1100,14 +1171,24 @@
                     const bsBtn = document.createElement('button');
                     bsBtn.className = 'bg-slate-200 text-slate-600 rounded-lg font-bold px-3 py-3 active:bg-slate-300 transition-colors text-sm';
                     bsBtn.innerHTML = '<i data-lucide="delete" class="w-5 h-5"></i>';
-                    bsBtn.onclick = () => { initAudio(); const input = document.getElementById('typ-input'); input.value = input.value.slice(0, -1); };
+                    bsBtn.onclick = () => { 
+                        initAudio(); 
+                        const input = document.getElementById('typ-input'); 
+                        input.value = input.value.slice(0, -1); 
+                        if (currentOptions.typingDifficulty === 'easy') updateEasyDisplay();
+                    };
                     rowDiv.appendChild(bsBtn);
                 }
                 row.forEach(char => {
                     const btn = document.createElement('button');
                     btn.className = 'bg-white border border-slate-200 text-slate-700 rounded-lg font-bold flex-1 py-3 active:bg-slate-50 transition-colors max-w-[45px] text-lg';
                     btn.innerText = char === ' ' ? '␣' : char;
-                    btn.onclick = () => { initAudio(); const input = document.getElementById('typ-input'); input.value += char; };
+                    btn.onclick = () => { 
+                        initAudio(); 
+                        const input = document.getElementById('typ-input'); 
+                        input.value += char; 
+                        if (currentOptions.typingDifficulty === 'easy') updateEasyDisplay();
+                    };
                     rowDiv.appendChild(btn);
                 });
                 if (rIndex === 2) {
@@ -1122,6 +1203,45 @@
             lucide.createIcons();
         }
 
+        function generateEasyTyping(word) {
+            let cleanWord = word.replace(/\[.*?\]/g, '').trim();
+            let len = cleanWord.length;
+            let hideCount = len <= 3 ? 1 : 2;
+            
+            let validIndices = [];
+            for(let i=0; i<len; i++) {
+                if(cleanWord[i] !== ' ' && cleanWord[i] !== '-') validIndices.push(i);
+            }
+            hideCount = Math.min(hideCount, validIndices.length);
+            let indices = shuffle(validIndices).slice(0, hideCount).sort((a,b) => a-b);
+            
+            let displayArr = cleanWord.split('');
+            let ans = '';
+            for(let i of indices) {
+                ans += displayArr[i];
+                displayArr[i] = '_';
+            }
+            return { display: displayArr.join(' '), ans: ans.toLowerCase(), fullWord: cleanWord, displayArr: displayArr, indices: indices };
+        }
+
+        function updateEasyDisplay() {
+            if (currentOptions.typingDifficulty !== 'easy' || !currentTypTarget) return;
+            const inputVal = document.getElementById('typ-input').value;
+            let displayArr = [...currentTypTarget.displayArr];
+            let valIdx = 0;
+            for (let i = 0; i < displayArr.length; i++) {
+                if (displayArr[i] === '_') {
+                    if (valIdx < inputVal.length) {
+                        displayArr[i] = `<span class="text-secondary border-b-[3px] border-secondary">${inputVal[valIdx]}</span>`;
+                        valIdx++;
+                    } else {
+                        displayArr[i] = '_';
+                    }
+                }
+            }
+            document.getElementById('typ-easy-hint-container').innerHTML = `<div class="text-3xl font-mono font-bold tracking-widest text-primary mb-4 bg-blue-50 py-3 px-6 rounded-xl inline-block border border-blue-100">${displayArr.join(' ')}</div>`;
+        }
+
         function initTyping() { typIndex = 0; renderTyping(); }
 
         function renderTyping() {
@@ -1130,13 +1250,24 @@
             }
             typHintCount = 0;
             document.getElementById('typ-current').innerText = typIndex + 1;
-            currentTypTarget = currentQuizData[typIndex];
-            document.getElementById('typ-q').innerText = currentTypTarget.jp;
+            const target = currentQuizData[typIndex];
+            document.getElementById('typ-q').innerText = target.jp;
             
             const input = document.getElementById('typ-input');
             input.value = '';
-            input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-slate-200 rounded-xl mb-3 focus:border-primary outline-none transition-colors bg-white text-slate-800 shadow-sm";
             input.disabled = false;
+            
+            if(currentOptions.typingDifficulty === 'easy') {
+                let easyData = generateEasyTyping(target.en);
+                currentTypTarget = { ...target, ans: easyData.ans, fullWord: easyData.fullWord, displayArr: easyData.displayArr };
+                document.getElementById('typ-easy-hint-container').innerHTML = `<div class="text-3xl font-mono font-bold tracking-widest text-primary mb-4 bg-blue-50 py-3 px-6 rounded-xl inline-block border border-blue-100">${easyData.display}</div>`;
+                // 入力欄は見えないようにするがフォーカス可能
+                input.className = "w-0 h-0 opacity-0 absolute -z-10";
+            } else {
+                currentTypTarget = { ...target, ans: target.en.replace(/\[.*?\]/g, '').trim().toLowerCase(), fullWord: target.en.replace(/\[.*?\]/g, '').trim() };
+                document.getElementById('typ-easy-hint-container').innerHTML = "";
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-slate-200 rounded-xl mb-3 focus:border-primary outline-none transition-colors bg-surface text-slate-800 shadow-sm";
+            }
             
             document.getElementById('typ-feedback').innerHTML = '';
             document.getElementById('typ-hint-btn').innerHTML = '<i data-lucide="lightbulb" class="w-4 h-4"></i> ヒント';
@@ -1145,6 +1276,9 @@
         }
 
         function initTypingListener() {
+            document.getElementById('typ-input').addEventListener('input', function(e) {
+                if(currentOptions.typingDifficulty === 'easy') updateEasyDisplay();
+            });
             document.getElementById('typ-input').addEventListener('keypress', function(e) {
                 if(e.key === 'Enter') { initAudio(); handleTypingEnter(); }
             });
@@ -1155,16 +1289,24 @@
             if(input.disabled || !currentTypTarget) return;
             
             const ans = input.value.replace(/\s+/g, ' ').trim().toLowerCase();
-            const correctAns = currentTypTarget.en.replace(/\s+/g, ' ').trim().toLowerCase();
+            const correctAns = currentTypTarget.ans.replace(/\s+/g, '').trim(); 
             const feedback = document.getElementById('typ-feedback');
             
-            if(ans === correctAns) {
+            if(ans.replace(/\s+/g, '') === correctAns) {
                 playSound('correct');
                 let score = parseInt(storage.getItem('wm_pro_stats_typing')||0) + 1;
                 storage.setItem('wm_pro_stats_typing', score);
                 addExp(2);
                 
-                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-secondary bg-emerald-50 text-secondary rounded-xl mb-3 outline-none shadow-sm";
+                if (currentOptions.typingDifficulty === 'easy') {
+                    const easyContainer = document.getElementById('typ-easy-hint-container').children[0];
+                    easyContainer.classList.replace('border-blue-100', 'border-secondary');
+                    easyContainer.classList.replace('bg-blue-50', 'bg-emerald-50');
+                    easyContainer.classList.replace('text-primary', 'text-secondary');
+                } else {
+                    input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-secondary bg-emerald-50 text-secondary rounded-xl mb-3 outline-none shadow-sm";
+                }
+                
                 feedback.innerHTML = '<span class="text-secondary animate-pop flex items-center gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent</span>';
                 document.getElementById('typ-hint-btn').classList.add('hidden');
                 lucide.createIcons();
@@ -1174,13 +1316,53 @@
             } else {
                 playSound('wrong');
                 recordError(currentTypTarget.en);
-                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
-                input.classList.add('animate-pulse');
-                setTimeout(()=> input.classList.remove('animate-pulse'), 300);
+                
+                if (currentOptions.typingDifficulty === 'easy') {
+                    let container = document.getElementById('typ-easy-hint-container').children[0];
+                    container.classList.add('animate-pulse', 'bg-red-50', 'border-red-400');
+                    setTimeout(() => container.classList.remove('animate-pulse', 'bg-red-50', 'border-red-400'), 300);
+                } else {
+                    input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
+                    input.classList.add('animate-pulse');
+                    setTimeout(()=> input.classList.remove('animate-pulse'), 300);
+                }
+                
                 feedback.innerHTML = '<span class="text-red-500 flex items-center gap-1"><i data-lucide="alert-circle" class="w-5 h-5"></i> Miss</span>';
                 lucide.createIcons();
                 input.value = '';
+                if (currentOptions.typingDifficulty === 'easy') updateEasyDisplay();
             }
+        }
+
+        function handleTypingGiveUp() {
+            initAudio();
+            const input = document.getElementById('typ-input');
+            if (input.disabled || !currentTypTarget) return;
+
+            playSound('wrong');
+            recordError(currentTypTarget.en);
+            
+            const correctAns = currentTypTarget.en.replace(/\[.*?\]/g, '').trim();
+            if(currentOptions.typingDifficulty === 'easy') {
+                input.value = currentTypTarget.ans; 
+                updateEasyDisplay();
+                let easyContainer = document.getElementById('typ-easy-hint-container').children[0];
+                easyContainer.classList.replace('text-primary', 'text-red-500');
+                easyContainer.classList.replace('border-blue-100', 'border-red-200');
+                easyContainer.classList.replace('bg-blue-50', 'bg-red-50');
+            } else {
+                input.value = correctAns; 
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
+            }
+            
+            const feedback = document.getElementById('typ-feedback');
+            feedback.innerHTML = '<span class="text-red-600 flex items-center justify-start gap-1 text-sm"><i data-lucide="info" class="w-4 h-4"></i> 正解はコチラ</span>';
+            document.getElementById('typ-hint-btn').classList.add('hidden');
+            lucide.createIcons();
+            
+            input.disabled = true;
+            playAudio(currentTypTarget.en);
+            setTimeout(() => { typIndex++; renderTyping(); }, 2000); 
         }
 
         function handleTypingHint() {
@@ -1189,23 +1371,16 @@
             if (input.disabled || !currentTypTarget) return;
             
             typHintCount++;
-            const cleanEn = currentTypTarget.en.trim();
+            const ansTarget = currentTypTarget.ans; 
             const btn = document.getElementById('typ-hint-btn');
             
-            if (typHintCount >= 4 || typHintCount >= cleanEn.length) {
-                playSound('wrong');
-                recordError(cleanEn);
-                input.value = cleanEn; 
-                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
-                document.getElementById('typ-feedback').innerHTML = '<span class="text-red-600 flex items-center gap-1"><i data-lucide="info" class="w-5 h-5"></i> ギブアップ</span>';
-                btn.classList.add('hidden');
-                lucide.createIcons();
-                input.disabled = true;
-                playAudio(cleanEn);
-                setTimeout(() => { typIndex++; renderTyping(); }, 2000); 
+            if (typHintCount >= 4 || typHintCount >= ansTarget.length) {
+                handleTypingGiveUp();
             } else {
-                input.value = cleanEn.substring(0, typHintCount);
-                if(typHintCount === 3 || typHintCount === cleanEn.length -1) {
+                input.value = ansTarget.substring(0, typHintCount);
+                if (currentOptions.typingDifficulty === 'easy') updateEasyDisplay();
+                
+                if(typHintCount === 3 || typHintCount === ansTarget.length -1) {
                     btn.innerHTML = '<i data-lucide="flag" class="w-4 h-4"></i> ギブアップ';
                     lucide.createIcons();
                 }
@@ -1233,7 +1408,7 @@
             
             cards.forEach(c => {
                 let div = document.createElement('div');
-                div.className = 'card w-full h-16 md:h-20 cursor-pointer'; 
+                div.className = 'card w-full aspect-[4/3] cursor-pointer'; 
                 div.dataset.pair = c.pair; div.dataset.text = c.text;
                 let fs = c.text.length > 10 ? 'text-xs md:text-sm' : 'text-sm md:text-base';
                 div.innerHTML = `<div class="card-inner"><div class="card-front"><i data-lucide="help-circle" class="w-6 h-6 opacity-30"></i></div><div class="card-back ${fs}">${c.text}</div></div>`;
@@ -1241,6 +1416,8 @@
                 grid.appendChild(div);
             });
             lucide.createIcons();
+            
+            // Set the interval reliably here
             mStartTime = Date.now();
             mTimerInterval = setInterval(() => { document.getElementById('match-timer').innerText = ((Date.now() - mStartTime) / 1000).toFixed(1); }, 100);
         }
@@ -1276,7 +1453,7 @@
             matchingRanks.forEach((r, i) => {
                 let badge = i === 0 ? '<i data-lucide="award" class="w-4 h-4 text-yellow-500"></i>' : `<span class="text-slate-400 font-bold">${i+1}.</span>`;
                 let isMe = r.time === parseFloat(timeStr) ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100';
-                rankHtml += `<div class="flex justify-between items-center px-3 py-2 border rounded-lg ${isMe}"><span class="font-bold text-slate-500 w-6 flex justify-center">${badge}</span><span class="font-bold text-slate-800 text-sm">${r.time.toFixed(1)}s</span></div>`;
+                rankHtml += `<div class="flex justify-between items-center px-3 py-2 border rounded-lg ${isMe}"><span class="font-bold w-6 flex justify-center">${badge}</span><span class="font-bold text-slate-800 text-sm">${r.time.toFixed(1)}s</span></div>`;
             });
             rankHtml += `</div>`;
             showResult("Clear!", "素早いマッチングでした", rankHtml, "win");
@@ -1328,7 +1505,7 @@
                 mvsLock[player] = true;
                 setTimeout(() => {
                     playSound('match');
-                    mFirstCard = mvsFirstCard[player]; // fallback ref
+                    mFirstCard = mvsFirstCard[player]; 
                     mvsFirstCard[player].classList.add('matched'); el.classList.add('matched');
                     mvsFirstCard[player] = null; mvsLock[player] = false; mvsPairs[player]++;
                     if(mvsPairs[player] === 4) {
@@ -1347,10 +1524,10 @@
         function clearMatchingVs() { }
 
         // --- 9. Time Trial ---
-        let ttStartTime = 0, ttTimerInterval, ttSortableEn = null;
-        let ttSortables = [];
+        let ttStartTime = 0, ttTimerInterval, ttSortables = [];
         
         function initTimeTrial(sourceData) {
+            clearInterval(ttTimerInterval); document.getElementById('tt-timer').innerText = "0.0";
             const jpList = document.getElementById('tt-jp-list');
             const dropZone = document.getElementById('tt-drop-zone');
             const enList = document.getElementById('tt-en-list');
@@ -1377,7 +1554,7 @@
 
             enCards.forEach(item => {
                 let enEl = document.createElement('div');
-                enEl.className = 'h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-between px-3 font-bold text-primary text-xs md:text-sm shadow-sm cursor-grab active:cursor-grabbing hover:border-primary transition-colors';
+                enEl.className = 'h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-between px-3 font-bold text-primary text-xs md:text-sm shadow-sm cursor-grab active:cursor-grabbing btn-elegant';
                 enEl.dataset.en = item.en; enEl.dataset.jp = item.jp;
                 enEl.innerHTML = `<span>${item.en}</span> <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 pointer-events-none"></i>`;
                 enList.appendChild(enEl);
@@ -1385,9 +1562,7 @@
             lucide.createIcons();
             ttSortables.push(new Sortable(enList, { group: 'shared', animation: 150, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag' }));
             
-            // Timer starts here, AFTER clearing previously
-            clearInterval(ttTimerInterval);
-            document.getElementById('tt-timer').innerText = "0.0";
+            // Set the interval reliably here
             ttStartTime = Date.now();
             ttTimerInterval = setInterval(() => { document.getElementById('tt-timer').innerText = ((Date.now() - ttStartTime) / 1000).toFixed(1); }, 100);
         }
@@ -1408,7 +1583,7 @@
                         card.classList.replace('border-slate-200', 'border-secondary');
                         card.classList.replace('text-primary', 'text-secondary');
                         card.classList.add('bg-emerald-50');
-                        card.classList.remove('cursor-grab', 'active:cursor-grabbing');
+                        card.classList.remove('cursor-grab', 'active:cursor-grabbing', 'btn-elegant');
                         card.style.pointerEvents = 'none';
                     } else {
                         toMoveBack.push(card);
@@ -1468,7 +1643,7 @@
             const cContainer = document.getElementById('list-choices'); cContainer.innerHTML = '';
             choices.forEach(c => {
                 let btn = document.createElement('button');
-                btn.className = 'bg-white border border-slate-200 text-slate-700 font-bold py-4 rounded-xl text-sm hover:border-primary transition-colors shadow-sm truncate px-2';
+                btn.className = 'bg-white border border-slate-200 text-slate-700 font-bold py-4 rounded-xl text-sm btn-elegant shadow-sm truncate px-2 w-full';
                 btn.innerText = c.jp; btn.onclick = () => { initAudio(); handleListSelect(c, btn); };
                 cContainer.appendChild(btn);
             });
@@ -1514,8 +1689,6 @@
                 setTimeout(() => { listIndex++; renderListening(); }, 1000);
             } else {
                 playSound('wrong');
-                listSelected = listSelected.filter(item => item !== null);
-                while(listSelected.length < 3) listSelected.push(null);
                 updateListSlots();
             }
         }

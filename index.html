@@ -84,7 +84,16 @@
             --color-slate-100: #1e293b;
         }
 
-        body { touch-action: manipulation; user-select: none; -webkit-user-select: none; background-color: var(--color-background); color: var(--color-text-main); }
+        body { 
+            touch-action: manipulation; 
+            user-select: none; 
+            -webkit-user-select: none; 
+            background-color: var(--color-background); 
+            color: var(--color-text-main); 
+            height: 100dvh; 
+            width: 100vw; 
+            overflow: hidden; 
+        }
         .text-slate-800, .text-slate-700 { color: var(--color-text-main) !important; }
         .text-slate-600, .text-slate-500, .text-slate-400 { color: var(--color-text-muted) !important; }
         .bg-white, .bg-surface { background-color: var(--color-surface) !important; }
@@ -170,7 +179,7 @@
     </aside>
 
     <!-- Main Content Area -->
-    <main class="flex-1 relative overflow-y-auto overflow-x-hidden pb-20 md:pb-0">
+    <main class="flex-1 relative overflow-y-auto overflow-x-hidden pb-24 md:pb-0">
         
         <!-- ================= 1. Dashboard Screen ================= -->
         <div id="screen-dashboard" class="screen flex flex-col p-6 md:p-8 max-w-6xl mx-auto min-h-full pt-8">
@@ -416,7 +425,7 @@
     </main>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="md:hidden absolute bottom-0 w-full bg-surface border-t border-slate-200 flex justify-around p-2 z-30 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+    <nav class="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-slate-200 flex justify-around p-2 z-40 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]" style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom));">
         <button onclick="navTo('dashboard')" id="mob-dashboard" class="flex flex-col items-center p-2 text-primary">
             <i data-lucide="layout-dashboard" class="w-5 h-5 mb-1"></i><span class="text-[10px] font-bold">Home</span>
         </button>
@@ -636,6 +645,16 @@
         });
         const categories = ["全て", ...new Set(wordData.map(w => w.cat))];
 
+        // --- Theme Init ---
+        const savedTheme = storage.getItem('wm_pro_theme') || 'default';
+        applyTheme(savedTheme);
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            storage.setItem('wm_pro_theme', theme);
+            closeModal('modal-theme');
+        }
+
         // --- State & Storage ---
         let totalSeconds = parseInt(storage.getItem('wm_pro_sec')) || 0;
         let lastLogin = storage.getItem('wm_pro_date');
@@ -656,7 +675,9 @@
             lucide.createIcons();
             checkLogin();
             updateTimeUI();
-            updateDashboardScores();
+            
+            // 安全なダッシュボード更新処理（エラー回避）
+            try { updateDashboardScores(); } catch(e) { console.error(e); }
             
             setInterval(() => {
                 totalSeconds++;
@@ -665,13 +686,14 @@
                 updateStaminaLogic();
             }, 1000);
             
-            if (document.getElementById('display-cpu-level')) document.getElementById('display-cpu-level').innerText = cpuLevel;
+            // Fix: CPU level update - Safe check for element existence
+            if (document.getElementById('display-cpu-level')) {
+                document.getElementById('display-cpu-level').innerText = cpuLevel;
+            }
             renderVocabulary();
             renderKeyboard();
             initTypingListener();
-            
-            const savedTheme = storage.getItem('wm_pro_theme') || 'default';
-            applyTheme(savedTheme);
+            populateCategorySelect();
         });
 
         // Theme System with EXP Unlock
@@ -703,12 +725,6 @@
             });
             lucide.createIcons();
             showModal('modal-theme');
-        }
-
-        function applyTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            storage.setItem('wm_pro_theme', theme);
-            closeModal('modal-theme');
         }
 
         function checkLogin() {
@@ -909,6 +925,8 @@
         // --- Setup Modal ---
         let pendingMode = '';
         let selectedSetupCategory = "全て";
+
+        function populateCategorySelect() {} // 互換性維持
 
         function renderCategoryButtons() {
             const list = document.getElementById('setup-category-buttons');
@@ -1261,7 +1279,6 @@
                 let easyData = generateEasyTyping(target.en);
                 currentTypTarget = { ...target, ans: easyData.ans, fullWord: easyData.fullWord, displayArr: easyData.displayArr };
                 document.getElementById('typ-easy-hint-container').innerHTML = `<div class="text-3xl font-mono font-bold tracking-widest text-primary mb-4 bg-blue-50 py-3 px-6 rounded-xl inline-block border border-blue-100">${easyData.display}</div>`;
-                // 入力欄は見えないようにするがフォーカス可能
                 input.className = "w-0 h-0 opacity-0 absolute -z-10";
             } else {
                 currentTypTarget = { ...target, ans: target.en.replace(/\[.*?\]/g, '').trim().toLowerCase(), fullWord: target.en.replace(/\[.*?\]/g, '').trim() };
@@ -1417,7 +1434,6 @@
             });
             lucide.createIcons();
             
-            // Set the interval reliably here
             mStartTime = Date.now();
             mTimerInterval = setInterval(() => { document.getElementById('match-timer').innerText = ((Date.now() - mStartTime) / 1000).toFixed(1); }, 100);
         }
@@ -1453,7 +1469,7 @@
             matchingRanks.forEach((r, i) => {
                 let badge = i === 0 ? '<i data-lucide="award" class="w-4 h-4 text-yellow-500"></i>' : `<span class="text-slate-400 font-bold">${i+1}.</span>`;
                 let isMe = r.time === parseFloat(timeStr) ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100';
-                rankHtml += `<div class="flex justify-between items-center px-3 py-2 border rounded-lg ${isMe}"><span class="font-bold w-6 flex justify-center">${badge}</span><span class="font-bold text-slate-800 text-sm">${r.time.toFixed(1)}s</span></div>`;
+                rankHtml += `<div class="flex justify-between items-center px-3 py-2 border rounded-lg ${isMe}"><span class="font-bold text-slate-500 w-6 flex justify-center">${badge}</span><span class="font-bold text-slate-800 text-sm">${r.time.toFixed(1)}s</span></div>`;
             });
             rankHtml += `</div>`;
             showResult("Clear!", "素早いマッチングでした", rankHtml, "win");
@@ -1521,7 +1537,6 @@
                 setTimeout(() => { mvsFirstCard[player].classList.remove('flipped'); el.classList.remove('flipped'); mvsFirstCard[player] = null; mvsLock[player] = false; }, 800);
             }
         }
-        function clearMatchingVs() { }
 
         // --- 9. Time Trial ---
         let ttStartTime = 0, ttTimerInterval, ttSortables = [];

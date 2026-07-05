@@ -257,6 +257,36 @@
         /* Mascot Animation */
         .mascot-float { animation: float 3s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
+        .mascot-react { animation: mascotReact 0.65s ease; }
+        @keyframes mascotReact {
+            0% { transform: translateY(0) scale(1) rotate(0deg); }
+            35% { transform: translateY(-12px) scale(1.08) rotate(-4deg); }
+            70% { transform: translateY(2px) scale(0.98) rotate(3deg); }
+            100% { transform: translateY(0) scale(1) rotate(0deg); }
+        }
+        .buddy-spark {
+            position: absolute;
+            width: 0.45rem;
+            height: 0.45rem;
+            border-radius: 999px;
+            background: #facc15;
+            box-shadow: 0 0 16px #facc15;
+            pointer-events: none;
+            animation: buddySpark 0.85s ease forwards;
+        }
+        @keyframes buddySpark {
+            0% { opacity: 0; transform: translate(0, 0) scale(0.4); }
+            25% { opacity: 1; }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.25); }
+        }
+        .week-bar {
+            min-width: 1.2rem;
+            width: 100%;
+            border-radius: 999px 999px 0.35rem 0.35rem;
+            background: linear-gradient(180deg, var(--color-primary), var(--color-primaryHover));
+            box-shadow: 0 10px 20px rgba(59, 94, 232, 0.18);
+            transition: height 0.35s ease;
+        }
 
         /* VS Screen (Karuta & LVS) */
         .vs-half { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
@@ -324,7 +354,8 @@
                 <!-- Mascot Area -->
                 <div class="md:col-span-1 bg-surface rounded-2xl p-4 shadow-sm border border-slate-200 flex items-center gap-4 relative overflow-hidden group">
                     <div class="absolute inset-0 bg-gradient-to-tr from-transparent to-primaryLight/30 pointer-events-none"></div>
-                    <div id="mascot-container" class="w-20 h-20 flex-shrink-0 relative z-10 mascot-float"></div>
+                    <div id="mascot-container" onclick="handleMascotTap()" class="w-20 h-20 flex-shrink-0 relative z-10 mascot-float cursor-pointer"></div>
+                    <div id="mascot-bubble" class="hidden absolute left-4 top-[5.8rem] z-20 bg-surface border border-slate-200 shadow-lg rounded-xl px-3 py-2 text-[11px] font-extrabold text-slate-700 max-w-[190px]"></div>
                     <div class="relative z-10 flex-1">
                         <div class="flex items-center justify-between mb-1">
                             <h3 class="text-sm font-extrabold text-slate-800">キミの相棒</h3>
@@ -370,6 +401,14 @@
                         <div id="stamina-timer" class="absolute top-1 right-2 text-[8px] text-slate-400 font-bold">MAX</div>
                     </div>
                 </div>
+            </div>
+
+            <div class="bg-surface rounded-2xl p-4 shadow-sm border border-slate-200 mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2 text-slate-700 font-extrabold text-sm"><i data-lucide="bar-chart-3" class="w-4 h-4 text-primary"></i>今週の学習時間</div>
+                    <div id="week-total-label" class="text-xs font-bold text-slate-400">0分</div>
+                </div>
+                <div id="week-chart" class="grid grid-cols-6 gap-3 h-24 items-end"></div>
             </div>
 
             <!-- Learning Course -->
@@ -503,6 +542,7 @@
             <div class="flex-grow flex flex-col items-center justify-start pt-4 w-full">
                 <div class="text-slate-400 mb-2 font-bold uppercase tracking-wider text-xs">Translate to English</div>
                 <div id="td-q" class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-4 text-center"></div>
+                <div id="td-easy-hint-container" class="text-center w-full mb-4"></div>
                 
                 <input type="text" id="td-input" placeholder="type here..." autocomplete="off" spellcheck="false" class="w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-slate-200 rounded-xl mb-3 outline-none bg-surface text-slate-800 shadow-sm focus:border-primary">
                 
@@ -535,6 +575,25 @@
             </div>
         </div>
 
+        <!-- ================= Listening VS ================= -->
+        <div id="screen-listening-vs" class="hidden screen fixed inset-0 z-50 bg-surface flex-col overflow-hidden">
+            <button onclick="endLvsEarly()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-slate-800 text-white p-3 rounded-full hover:bg-slate-700 z-[100] transition-colors shadow-xl cursor-pointer border-2 border-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <button id="lvs-audio-btn" onclick="manualPlayLvsAudio()" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white p-4 rounded-full shadow-xl z-[100] border-4 border-surface"><i data-lucide="volume-2" class="w-7 h-7 text-white"></i></button>
+            <div class="vs-half vs-top">
+                <div class="absolute top-5 right-5 bg-surface px-4 py-2 rounded-lg font-bold text-red-600 shadow-sm z-20 border border-red-100">P2 <span id="lvs-score-p2">0</span></div>
+                <div class="flex gap-2 mb-4 w-full justify-center" id="lvs-slots-p2"><div></div><div></div><div></div></div>
+                <div id="lvs-choices-p2" class="grid grid-cols-3 gap-2 w-full max-w-xl"></div>
+                <div id="lvs-lock-p2" class="absolute inset-0 bg-red-100 hidden flex items-center justify-center z-30 opacity-90"><div class="font-black text-red-500 text-3xl">WAIT</div></div>
+            </div>
+            <div class="vs-divider flex items-center justify-center"><div class="absolute bg-slate-800 text-white font-bold px-6 py-1.5 rounded-full text-sm shadow-sm">Listening Battle</div></div>
+            <div class="vs-half vs-bottom">
+                <div class="absolute top-5 right-5 bg-surface px-4 py-2 rounded-lg font-bold text-primary shadow-sm z-20 border border-slate-200">P1 <span id="lvs-score-p1">0</span></div>
+                <div class="flex gap-2 mb-4 w-full justify-center" id="lvs-slots-p1"><div></div><div></div><div></div></div>
+                <div id="lvs-choices-p1" class="grid grid-cols-3 gap-2 w-full max-w-xl"></div>
+                <div id="lvs-lock-p1" class="absolute inset-0 bg-primaryLight hidden flex items-center justify-center z-30 opacity-90"><div class="font-black text-primary text-3xl">WAIT</div></div>
+            </div>
+        </div>
+
         <!-- ================= Time Attack: Matching ================= -->
         <div id="screen-matching" class="screen hidden flex-col p-4 md:p-8 max-w-4xl mx-auto min-h-full">
             <div class="flex justify-between items-center mb-4">
@@ -543,6 +602,22 @@
             </div>
             <div class="flex-grow flex items-center justify-center w-full px-2 pb-8">
                 <div id="matching-grid" class="grid grid-cols-3 md:grid-cols-4 gap-3 w-full max-w-2xl mx-auto"></div>
+            </div>
+        </div>
+
+        <!-- ================= Matching VS ================= -->
+        <div id="screen-matching-vs" class="hidden screen fixed inset-0 z-50 bg-surface flex-col overflow-hidden">
+            <button onclick="endMatchingEarly()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-slate-800 text-white p-3 rounded-full hover:bg-slate-700 z-[100] transition-colors shadow-xl cursor-pointer border-2 border-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <div class="vs-half vs-top">
+                <div class="absolute top-5 right-5 bg-surface px-4 py-2 rounded-lg font-bold text-red-600 shadow-sm z-20 border border-red-100">P2</div>
+                <div id="mvs-win-p2" class="hidden absolute inset-0 bg-red-50/90 z-30 flex items-center justify-center text-red-500 font-black text-4xl">WIN</div>
+                <div id="mvs-grid-p2" class="grid grid-cols-4 gap-2 w-full max-w-xl"></div>
+            </div>
+            <div class="vs-divider flex items-center justify-center"><div class="absolute bg-slate-800 text-white font-bold px-6 py-1.5 rounded-full text-sm shadow-sm">Matching Battle</div></div>
+            <div class="vs-half vs-bottom">
+                <div class="absolute top-5 right-5 bg-surface px-4 py-2 rounded-lg font-bold text-primary shadow-sm z-20 border border-slate-200">P1</div>
+                <div id="mvs-win-p1" class="hidden absolute inset-0 bg-primaryLight/90 z-30 flex items-center justify-center text-primary font-black text-4xl">WIN</div>
+                <div id="mvs-grid-p1" class="grid grid-cols-4 gap-2 w-full max-w-xl"></div>
             </div>
         </div>
 
@@ -639,7 +714,10 @@
             <h2 id="res-title" class="text-2xl font-extrabold text-slate-800 mb-2 relative z-10"></h2>
             <p id="res-desc" class="text-slate-500 mb-6 text-sm relative z-10 font-bold"></p>
             <div id="res-extra" class="mb-6 text-left text-sm w-full flex flex-col items-center relative z-10"></div>
-            <button onclick="closeModal('modal-result')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors text-sm relative z-10 cursor-pointer">閉じる</button>
+            <div class="grid grid-cols-2 gap-2 relative z-10">
+                <button id="res-replay-btn" onclick="replayLastMode()" class="hidden w-full bg-primary hover:bg-primaryHover text-white font-bold py-3 rounded-xl transition-colors text-sm cursor-pointer flex items-center justify-center gap-1"><i data-lucide="rotate-ccw" class="w-4 h-4 text-white"></i>もう一度</button>
+                <button onclick="closeModal('modal-result')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors text-sm cursor-pointer">閉じる</button>
+            </div>
         </div>
     </div>
 
@@ -797,7 +875,15 @@
         let cpuLevel = parseInt(window.localStorage.getItem('wm_pro_cpu')) || 1;
         let stamina = parseInt(window.localStorage.getItem('wm_pro_stamina')); if(isNaN(stamina)) stamina = 10;
         let staminaTime = parseInt(window.localStorage.getItem('wm_pro_stamina_time')) || Date.now();
-        let totalExp = parseInt(window.localStorage.getItem('wm_pro_exp')) || 0;
+        let categoryExp = readStoredJson('wm_pro_category_exp', {});
+        if(Object.keys(categoryExp).length === 0 && parseInt(window.localStorage.getItem('wm_pro_exp'))) {
+            categoryExp[currentCategory] = parseInt(window.localStorage.getItem('wm_pro_exp')) || 0;
+            window.localStorage.setItem('wm_pro_category_exp', JSON.stringify(categoryExp));
+        }
+        let totalExp = categoryExp[currentCategory] || 0;
+        let learnReviewLog = readStoredJson('wm_pro_learn_review', []);
+        let weeklyStudy = readStoredJson('wm_pro_weekly_study', {});
+        let lastRunConfig = readStoredJson('wm_pro_last_run', null);
         let activeScreen = 'dashboard';
 
         // --- Core Functions ---
@@ -811,6 +897,7 @@
             setInterval(() => {
                 if (activeScreen === 'dashboard' || activeScreen === 'vocabulary') {
                     totalSeconds++; window.localStorage.setItem('wm_pro_sec', totalSeconds.toString());
+                    addStudySecond();
                     updateTimeUI();
                 }
                 updateStaminaLogic();
@@ -847,6 +934,7 @@
         }
 
         function updateDashboard() {
+            totalExp = getCategoryExp(currentCategory);
             let catWords = wordData.filter(w => w.cat === currentCategory);
             let oCount = 0, tCount = 0, xCount = 0;
             catWords.forEach(w => { if(wordStatus[w.en] === 'o') oCount++; else if(wordStatus[w.en] === 't') tCount++; else if(wordStatus[w.en] === 'x') xCount++; });
@@ -869,13 +957,52 @@
             document.getElementById('exp-count').innerText = totalExp;
             if(document.getElementById('display-cpu-level')) document.getElementById('display-cpu-level').innerText = cpuLevel;
             
-            updateTimeUI(); updateMascot();
+            updateTimeUI(); updateWeekChart(); updateMascot();
             if(activeScreen === 'vocabulary') renderVocabulary();
         }
 
         function updateTimeUI() {
             let m = Math.floor(totalSeconds / 60); let h = Math.floor(m / 60); m = m % 60;
             document.getElementById('time-count').innerText = (h > 0 ? `${h}時間${m}分` : `${m}分`) || "0分";
+        }
+        function getWeekKey(date = new Date()) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = (day + 6) % 7;
+            d.setDate(d.getDate() - diff);
+            d.setHours(0,0,0,0);
+            return d.toISOString().slice(0,10);
+        }
+        function getDayKey(date = new Date()) { return date.toISOString().slice(0,10); }
+        function addStudySecond() {
+            const weekKey = getWeekKey();
+            const dayKey = getDayKey();
+            if(!weeklyStudy[weekKey]) weeklyStudy[weekKey] = {};
+            weeklyStudy[weekKey][dayKey] = (weeklyStudy[weekKey][dayKey] || 0) + 1;
+            window.localStorage.setItem('wm_pro_weekly_study', JSON.stringify(weeklyStudy));
+            if(totalSeconds % 10 === 0) updateWeekChart();
+        }
+        function updateWeekChart() {
+            const chart = document.getElementById('week-chart'); if(!chart) return;
+            const weekKey = getWeekKey();
+            const start = new Date(weekKey + 'T00:00:00');
+            const labels = ['Mon','Tue','Wed','Thu','Fri','Sat'];
+            const values = labels.map((_, i) => {
+                const d = new Date(start); d.setDate(start.getDate() + i);
+                return weeklyStudy[weekKey]?.[getDayKey(d)] || 0;
+            });
+            const max = Math.max(...values, 60);
+            const totalMin = Math.floor(values.reduce((a,b)=>a+b,0) / 60);
+            document.getElementById('week-total-label').innerText = totalMin > 0 ? `${totalMin}分` : '0分';
+            chart.innerHTML = '';
+            values.forEach((sec, i) => {
+                const h = Math.max(8, Math.round((sec / max) * 78));
+                const min = Math.floor(sec / 60);
+                const wrap = document.createElement('div');
+                wrap.className = 'flex flex-col items-center justify-end h-full gap-1';
+                wrap.innerHTML = `<div class="text-[10px] font-bold text-slate-400">${min}m</div><div class="week-bar" style="height:${h}px"></div><div class="text-[10px] font-extrabold text-slate-500">${labels[i]}</div>`;
+                chart.appendChild(wrap);
+            });
         }
 
         function updateStaminaLogic() {
@@ -899,13 +1026,90 @@
             showResult("スタミナ不足", "回復するまでお待ちください。", "", "info"); return false;
         }
 
-        function addExp(amount) { totalExp += amount; window.localStorage.setItem('wm_pro_exp', totalExp); updateDashboard(); }
+        function getCategoryExp(cat = currentCategory) { return categoryExp[cat] || 0; }
+        function getTotalExpAll() { return Object.values(categoryExp).reduce((sum, value) => sum + (parseInt(value) || 0), 0); }
+        function addExp(amount, cat = currentCategory) {
+            categoryExp[cat] = getCategoryExp(cat) + amount;
+            totalExp = getCategoryExp(currentCategory);
+            window.localStorage.setItem('wm_pro_category_exp', JSON.stringify(categoryExp));
+            window.localStorage.setItem('wm_pro_exp', getTotalExpAll());
+            updateDashboard();
+        }
         function recordSuccess(enWord) { wordStatus[enWord] = 'o'; window.localStorage.setItem('wm_pro_word_status', JSON.stringify(wordStatus)); }
         function recordError(enWord) { wordStatus[enWord] = 'x'; window.localStorage.setItem('wm_pro_word_status', JSON.stringify(wordStatus)); }
+        function setWordStatus(enWord, status) {
+            if(wordStatus[enWord] === status) delete wordStatus[enWord];
+            else wordStatus[enWord] = status;
+            window.localStorage.setItem('wm_pro_word_status', JSON.stringify(wordStatus));
+            updateDashboard();
+            if(activeScreen === 'vocabulary') renderVocabulary();
+        }
+        function recordLearnReviewWord(word) {
+            learnReviewLog = [{ en: word.en, cat: word.cat, time: Date.now() }, ...learnReviewLog.filter(item => item.en !== word.en)];
+            learnReviewLog = learnReviewLog.slice(0, 80);
+            window.localStorage.setItem('wm_pro_learn_review', JSON.stringify(learnReviewLog));
+        }
+        function handleMascotTap() {
+            initAudio(); playSound('correct');
+            const mascot = document.getElementById('mascot-container');
+            mascot.classList.remove('mascot-react');
+            void mascot.offsetWidth;
+            mascot.classList.add('mascot-react');
+            spawnBuddySparks();
+            const msg = getMascotMessage();
+            showMascotBubble(msg);
+        }
+        function getMascotMessage() {
+            const today = getDayKey();
+            const countKey = `wm_pro_buddy_tap_count_${currentCategory}_${today}`;
+            const rewardKey = `wm_pro_buddy_reward_${currentCategory}_${today}`;
+            const tapCount = (parseInt(window.localStorage.getItem(countKey)) || 0) + 1;
+            window.localStorage.setItem(countKey, tapCount);
+            
+            const catWords = wordData.filter(w => w.cat === currentCategory);
+            const xCount = catWords.filter(w => wordStatus[w.en] === 'x').length;
+            const nextLevels = [0, 50, 100, 200, 350, 550, 800, 1200, 2000, 3500];
+            const next = nextLevels.find(v => v > totalExp);
+            const baseLines = [
+                '今日も少しずつ強くなろう!',
+                '毎日会えると嬉しいな！',
+                next ? `あと${next - totalExp}EXPで次の相棒!` : '最高レベル到達！すごい！',
+                '色んなモードで学習しよう!'
+            ];
+
+            if(tapCount === 4 && window.localStorage.getItem(rewardKey) !== 'done') {
+                addExp(1);
+                window.localStorage.setItem(rewardKey, 'done');
+                return '応援ボーナス +1 EXP!';
+            }
+            if(stamina >= 10) return 'スタミナ満タン。いつやるの？今でしょ！';
+            if(xCount >= 5) return '×だけ復習すると一気に強くなるよ。';
+            return baseLines[(tapCount - 1) % baseLines.length];
+        }
+        function showMascotBubble(text) {
+            const bubble = document.getElementById('mascot-bubble');
+            bubble.innerText = text;
+            bubble.classList.remove('hidden');
+            clearTimeout(showMascotBubble.timer);
+            showMascotBubble.timer = setTimeout(() => bubble.classList.add('hidden'), 1800);
+        }
+        function spawnBuddySparks() {
+            const box = document.getElementById('mascot-container');
+            for(let i=0; i<6; i++) {
+                const spark = document.createElement('span');
+                spark.className = 'buddy-spark';
+                spark.style.left = `${35 + Math.random()*35}%`;
+                spark.style.top = `${25 + Math.random()*35}%`;
+                spark.style.setProperty('--dx', `${(Math.random()*70)-35}px`);
+                spark.style.setProperty('--dy', `${-20 - Math.random()*45}px`);
+                box.appendChild(spark);
+                setTimeout(() => spark.remove(), 900);
+            }
+        }
 
         function updateMascot() {
             const expLevels = [0, 50, 100, 200, 350, 550, 800, 1200, 2000, 3500];
-            const names = ["タマゴ", "ひび割れタマゴ", "ヒヨコ", "スズメ", "ハト", "オウム", "フクロウ", "ワシ", "クジャク", "フェニックス"];
+            const names = ["ブックキャット", "ペンシルフォックス", "リスニングラビット", "ABCペンギン", "まるメガネオウル", "ルーンウルフ", "サンダータイガー", "スカイイーグル", "エメラルドドラゴン", "フレアフェニックス"];
             let lv = 1; for(let i=0; i<expLevels.length; i++) { if(totalExp >= expLevels[i]) lv = i+1; }
             
             document.getElementById('mascot-level').innerText = lv; document.getElementById('mascot-name').innerText = names[lv-1];
@@ -915,17 +1119,17 @@
             document.getElementById('mascot-exp-bar').style.width = pct + '%';
 
             const container = document.getElementById('mascot-container'); let svg = '';
-            // SVG Definitions (1 to 10)
-            if(lv===1) svg = `<ellipse cx="50" cy="55" rx="30" ry="40" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/>`;
-            else if(lv===2) svg = `<ellipse cx="50" cy="55" rx="30" ry="40" fill="#f8fafc" stroke="#cbd5e1" stroke-width="4"/><path d="M 30 45 L 40 55 L 50 45 L 60 55 L 70 45" fill="none" stroke="#94a3b8" stroke-width="2.5"/>`;
-            else if(lv===3) svg = `<circle cx="50" cy="55" r="30" fill="#fef08a" stroke="#facc15" stroke-width="4"/><circle cx="40" cy="48" r="4" fill="#1e293b"/><circle cx="60" cy="48" r="4" fill="#1e293b"/><path d="M 45 54 L 55 54 L 50 62 Z" fill="#fb923c"/>`;
-            else if(lv===4) svg = `<ellipse cx="25" cy="65" rx="15" ry="10" fill="#78350f" transform="rotate(20 25 65)"/><ellipse cx="75" cy="65" rx="15" ry="10" fill="#78350f" transform="rotate(-20 75 65)"/><circle cx="50" cy="60" r="25" fill="#d97706"/><circle cx="50" cy="55" r="18" fill="#fef3c7"/><circle cx="42" cy="50" r="3" fill="#1e293b"/><circle cx="58" cy="50" r="3" fill="#1e293b"/><path d="M 47 55 L 53 55 L 50 60 Z" fill="#1e293b"/>`;
-            else if(lv===5) svg = `<circle cx="50" cy="60" r="25" fill="#94a3b8"/><path d="M 30 60 Q 50 80 70 60 Q 50 40 30 60" fill="#a78bfa" opacity="0.4"/><circle cx="38" cy="48" r="4" fill="#facc15"/><circle cx="38" cy="48" r="2" fill="#1e293b"/><circle cx="62" cy="48" r="4" fill="#facc15"/><circle cx="62" cy="48" r="2" fill="#1e293b"/><path d="M 46 54 L 54 54 L 50 60 Z" fill="#1e293b"/>`;
-            else if(lv===6) svg = `<path d="M 50 25 Q 40 10 30 20 Q 45 30 50 30" fill="#ef4444"/><path d="M 50 25 Q 60 10 70 20 Q 55 30 50 30" fill="#3b82f6"/><circle cx="50" cy="60" r="26" fill="#ef4444"/><ellipse cx="20" cy="60" rx="12" ry="25" fill="#3b82f6" transform="rotate(15 20 60)"/><ellipse cx="80" cy="60" rx="12" ry="25" fill="#3b82f6" transform="rotate(-15 80 60)"/><circle cx="50" cy="50" r="16" fill="#ffffff"/><circle cx="42" cy="48" r="3" fill="#1e293b"/><circle cx="58" cy="48" r="3" fill="#1e293b"/><path d="M 45 52 Q 50 52 55 52 Q 55 60 50 65 Q 45 60 45 52" fill="#1e293b"/>`;
-            else if(lv===7) svg = `<path d="M 25 40 L 20 20 L 40 30 Z" fill="#64748b"/><path d="M 75 40 L 80 20 L 60 30 Z" fill="#64748b"/><circle cx="50" cy="60" r="28" fill="#64748b"/><circle cx="50" cy="65" r="20" fill="#e2e8f0"/><circle cx="35" cy="45" r="12" fill="#ffffff" stroke="#334155" stroke-width="3"/><circle cx="65" cy="45" r="12" fill="#ffffff" stroke="#334155" stroke-width="3"/><circle cx="35" cy="45" r="4" fill="#1e293b"/><circle cx="65" cy="45" r="4" fill="#1e293b"/><path d="M 47 50 L 53 50 L 50 58 Z" fill="#fbbf24"/>`;
-            else if(lv===8) svg = `<circle cx="50" cy="60" r="28" fill="#57534e"/><path d="M 22 60 Q 20 30 50 25 Q 80 30 78 60 Q 50 45 22 60" fill="#ffffff"/><path d="M 32 40 L 42 45 L 35 48 Z" fill="#1e293b"/><path d="M 68 40 L 58 45 L 65 48 Z" fill="#1e293b"/><path d="M 45 48 Q 50 48 55 48 Q 55 60 50 65 Q 48 60 45 52 Z" fill="#facc15"/>`;
-            else if(lv===9) svg = `<path d="M 10 50 Q 50 0 90 50 Q 50 30 10 50" fill="#22c55e"/><circle cx="30" cy="30" r="6" fill="#3b82f6" stroke="#facc15" stroke-width="2"/><circle cx="70" cy="30" r="6" fill="#3b82f6" stroke="#facc15" stroke-width="2"/><path d="M 35 80 Q 30 50 50 40 Q 70 50 65 80 Z" fill="#0284c7"/><circle cx="50" cy="40" r="10" fill="#0284c7"/><path d="M 48 30 L 45 20 M 50 30 L 50 18 M 52 30 L 55 20" stroke="#0284c7" stroke-width="2"/><circle cx="46" cy="38" r="1.5" fill="#ffffff"/><circle cx="54" cy="38" r="1.5" fill="#ffffff"/><path d="M 48 42 L 52 42 L 50 46 Z" fill="#facc15"/>`;
-            else if(lv===10) svg = `<path d="M 50 10 Q 70 30 85 50 Q 70 40 50 20 Q 30 40 15 50 Q 30 30 50 10" fill="#fef08a"/><path d="M 50 20 Q 65 40 80 60 Q 60 50 50 30 Q 40 50 20 60 Q 35 40 50 20" fill="#f97316"/><path d="M 50 60 Q 80 40 95 30 Q 80 60 60 80" fill="#ef4444"/><path d="M 50 60 Q 20 40 5 30 Q 20 60 40 80" fill="#ef4444"/><path d="M 40 90 Q 50 40 50 40 Q 50 40 60 90 Q 50 80 40 90" fill="#ef4444"/><circle cx="50" cy="45" r="12" fill="#ef4444"/><path d="M 45 35 Q 50 20 55 35 Q 50 30 45 35" fill="#facc15"/><circle cx="45" cy="43" r="2" fill="#fef08a"/><circle cx="55" cy="43" r="2" fill="#fef08a"/><path d="M 47 48 Q 50 48 53 48 L 50 55 Z" fill="#facc15"/>`;
+            const stroke = `stroke="#172033" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"`;
+            if(lv===1) svg = `<path d="M32 40 L22 18 L45 32 Z" fill="#f3c7a9" ${stroke}/><path d="M68 40 L78 18 L55 32 Z" fill="#f3c7a9" ${stroke}/><circle cx="50" cy="55" r="30" fill="#f8d8bd" ${stroke}/><circle cx="39" cy="52" r="3.5" fill="#172033"/><circle cx="61" cy="52" r="3.5" fill="#172033"/><path d="M46 62 L54 62 L50 68 Z" fill="#f472b6"/><path d="M35 82 Q50 73 65 82 L65 95 Q50 86 35 95 Z" fill="#3b5ee8" ${stroke}/>`;
+            else if(lv===2) svg = `<path d="M25 56 Q18 25 42 35" fill="#f59e0b" ${stroke}/><path d="M75 56 Q82 25 58 35" fill="#f59e0b" ${stroke}/><path d="M24 58 Q33 30 50 30 Q67 30 76 58 Q70 82 50 88 Q30 82 24 58 Z" fill="#f6a446" ${stroke}/><path d="M36 66 Q50 78 64 66 Q58 84 50 88 Q42 84 36 66 Z" fill="#fff7ed"/><circle cx="41" cy="52" r="3.5" fill="#172033"/><circle cx="59" cy="52" r="3.5" fill="#172033"/><path d="M68 78 Q92 72 83 45 Q102 70 76 96" fill="#f59e0b" ${stroke}/>`;
+            else if(lv===3) svg = `<path d="M38 40 Q28 5 44 8 Q55 19 48 42" fill="#fff" ${stroke}/><path d="M62 40 Q72 5 56 8 Q45 19 52 42" fill="#fff" ${stroke}/><circle cx="50" cy="60" r="30" fill="#fff" ${stroke}/><path d="M24 58 Q24 36 50 36 Q76 36 76 58" fill="none" stroke="#3b5ee8" stroke-width="5"/><rect x="18" y="55" width="10" height="20" rx="5" fill="#3b5ee8" ${stroke}/><rect x="72" y="55" width="10" height="20" rx="5" fill="#3b5ee8" ${stroke}/><circle cx="40" cy="58" r="3.5" fill="#172033"/><circle cx="60" cy="58" r="3.5" fill="#172033"/>`;
+            else if(lv===4) svg = `<ellipse cx="50" cy="58" rx="31" ry="39" fill="#334155" ${stroke}/><ellipse cx="50" cy="66" rx="21" ry="27" fill="#fff"/><circle cx="40" cy="48" r="3.5" fill="#fff"/><circle cx="60" cy="48" r="3.5" fill="#fff"/><path d="M43 56 L57 56 L50 65 Z" fill="#f59e0b" ${stroke}/><rect x="36" y="22" width="28" height="13" rx="5" fill="#3b5ee8" ${stroke}/>`;
+            else if(lv===5) svg = `<path d="M23 54 Q27 28 50 27 Q73 28 77 54 Q84 80 63 92 Q50 103 37 92 Q16 80 23 54 Z" fill="#c4b5fd" ${stroke}/><path d="M30 38 L26 22 L43 32 Z" fill="#a78bfa" ${stroke}/><path d="M70 38 L74 22 L57 32 Z" fill="#a78bfa" ${stroke}/><circle cx="40" cy="55" r="12" fill="#fff" ${stroke}/><circle cx="60" cy="55" r="12" fill="#fff" ${stroke}/><circle cx="40" cy="55" r="4" fill="#172033"/><circle cx="60" cy="55" r="4" fill="#172033"/><path d="M46 68 L54 68 L50 76 Z" fill="#facc15" ${stroke}/>`;
+            else if(lv===6) svg = `<path d="M30 42 L18 14 L45 30 Z" fill="#64748b" ${stroke}/><path d="M70 42 L82 14 L55 30 Z" fill="#64748b" ${stroke}/><path d="M22 57 Q32 22 50 22 Q68 22 78 57 Q71 86 50 94 Q29 86 22 57 Z" fill="#94a3b8" ${stroke}/><path d="M34 68 Q50 82 66 68 Q59 91 50 94 Q41 91 34 68 Z" fill="#e2e8f0"/><path d="M37 50 L48 55 L38 60 Z" fill="#fff" ${stroke}/><path d="M63 50 L52 55 L62 60 Z" fill="#fff" ${stroke}/><path d="M27 94 L73 94" stroke="#3b5ee8" stroke-width="5"/>`;
+            else if(lv===7) svg = `<path d="M28 42 L18 18 L42 31 Z" fill="#f97316" ${stroke}/><path d="M72 42 L82 18 L58 31 Z" fill="#f97316" ${stroke}/><circle cx="50" cy="58" r="34" fill="#f59e0b" ${stroke}/><path d="M25 44 L42 50 M75 44 L58 50 M22 61 L39 62 M78 61 L61 62" ${stroke}/><circle cx="39" cy="55" r="4" fill="#172033"/><circle cx="61" cy="55" r="4" fill="#172033"/><path d="M43 66 L57 66 L50 76 Z" fill="#fff" ${stroke}/><path d="M49 20 L59 5 L69 20" fill="#facc15" ${stroke}/>`;
+            else if(lv===8) svg = `<path d="M14 58 Q4 31 39 23 Q50 8 63 23 Q96 31 86 58 Q75 86 50 91 Q25 86 14 58 Z" fill="#475569" ${stroke}/><path d="M24 51 Q50 20 76 51 Q62 44 50 36 Q38 44 24 51 Z" fill="#fff"/><path d="M37 49 L47 54 L38 59 Z" fill="#fff" ${stroke}/><path d="M63 49 L53 54 L62 59 Z" fill="#fff" ${stroke}/><path d="M44 65 L56 65 L50 75 Z" fill="#facc15" ${stroke}/><path d="M16 61 Q-5 67 3 91 Q29 80 35 66" fill="#94a3b8" ${stroke}/><path d="M84 61 Q105 67 97 91 Q71 80 65 66" fill="#94a3b8" ${stroke}/>`;
+            else if(lv===9) svg = `<path d="M20 60 Q10 25 43 16 Q66 6 80 31 Q98 55 80 82 Q61 105 32 92 Q22 86 20 60 Z" fill="#4ade80" ${stroke}/><path d="M28 29 L16 8 L43 22" fill="#22c55e" ${stroke}/><path d="M72 27 L86 6 L91 34" fill="#22c55e" ${stroke}/><path d="M18 63 Q-9 72 -2 98 Q28 86 36 68" fill="#86efac" ${stroke}/><path d="M82 63 Q109 72 102 98 Q72 86 64 68" fill="#86efac" ${stroke}/><path d="M39 48 L49 53 L40 58 Z" fill="#fff" ${stroke}/><path d="M65 48 L55 53 L64 58 Z" fill="#fff" ${stroke}/><path d="M46 63 L56 63 L51 72 Z" fill="#facc15" ${stroke}/>`;
+            else if(lv===10) svg = `<path d="M50 4 Q64 22 73 44 Q59 36 53 22 Q48 42 36 55 Q37 27 50 4 Z" fill="#f97316" ${stroke}/><circle cx="50" cy="62" r="31" fill="#fb923c" ${stroke}/><circle cx="50" cy="64" r="21" fill="#fed7aa"/><path d="M24 64 Q-5 55 2 20 Q33 36 34 62" fill="#ef4444" ${stroke}/><path d="M76 64 Q105 55 98 20 Q67 36 66 62" fill="#ef4444" ${stroke}/><path d="M40 55 L49 59 L41 64 Z" fill="#fff" ${stroke}/><path d="M60 55 L51 59 L59 64 Z" fill="#fff" ${stroke}/><path d="M43 72 L57 72 L50 82 Z" fill="#facc15" ${stroke}/>`;
             container.innerHTML = `<svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-md">${svg}</svg>`;
         }
 
@@ -1009,7 +1213,7 @@
             ];
             themes.forEach(t => {
                 let btn = document.createElement('button');
-                const unlocked = totalExp >= t.req || t.req === 0;
+                const unlocked = getTotalExpAll() >= t.req || t.req === 0;
                 const selected = currentTheme === t.id;
                 btn.className = `theme-option flex justify-between items-center w-full p-4 rounded-2xl font-extrabold text-left ${unlocked ? 'cursor-pointer' : 'is-locked cursor-not-allowed'}`;
                 if(unlocked) {
@@ -1038,32 +1242,94 @@
         function applyTheme(t) { document.documentElement.setAttribute('data-theme', t); window.localStorage.setItem('wm_pro_theme', t); closeModal('modal-theme'); }
 
         let pendingMode = '';
+        let tdDifficulty = 'hard';
         function openSetupModal(mode) {
             pendingMode = mode;
             const container = document.getElementById('setup-options-container'); container.innerHTML = '';
-            
-            if(mode === 'vs' || mode === 'invader') {
+
+            container.innerHTML = `<p class="text-sm font-bold text-slate-600 text-center pb-3">現在選択中のカテゴリー「${currentCategory}」から出題します。</p>`;
+
+            if(mode !== 'vs' && mode !== 'invader') {
                 container.innerHTML += `
-                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">プレイ人数</label>
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">出題範囲</label>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <label class="bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-1 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
+                            <input type="radio" name="opt_filter" value="all" class="accent-primary" checked> すべて
+                        </label>
+                        <label class="bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-1 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
+                            <input type="radio" name="opt_filter" value="tx" class="accent-primary"> △と×
+                        </label>
+                        <label class="bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-1 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
+                            <input type="radio" name="opt_filter" value="x" class="accent-primary"> ×のみ
+                        </label>
+                    </div>`;
+            }
+
+            if(mode === 'learn') {
+                const reviewCount = learnReviewLog.filter(item => item.cat === currentCategory).length;
+                container.innerHTML += `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-4">学習タイプ</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
+                            <input type="radio" name="opt_learn_type" value="normal" class="accent-primary" checked> 通常
+                        </label>
+                        <label class="bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
+                            <input type="radio" name="opt_learn_type" value="review" class="accent-primary"> 復習 (${reviewCount})
+                        </label>
+                    </div>`;
+            }
+
+            if(mode === 'typing_drill') {
+                container.innerHTML += `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider mt-4">難易度</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
+                            <input type="radio" name="opt_typing_diff" value="easy" class="accent-primary"> Easy (穴埋め)
+                        </label>
+                        <label class="bg-surface border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-xs text-slate-700 shadow-sm">
+                            <input type="radio" name="opt_typing_diff" value="hard" class="accent-primary" checked> Hard (通常)
+                        </label>
+                    </div>`;
+            }
+            
+            if(mode === 'vs' || mode === 'invader' || mode === 'matching' || mode === 'listening_drill') {
+                const label1 = mode === 'vs' || mode === 'invader' ? '1人で (vs CPU)' : '1人でプレイ';
+                container.innerHTML += `
+                    <label class="block text-xs font-bold text-slate-400 mb-2 uppercase mt-4">プレイ人数</label>
                     <div class="flex gap-2">
                         <label class="flex-1 bg-surface border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm text-slate-700 shadow-sm">
-                            <i data-lucide="bot" class="w-5 h-5 text-slate-500"></i>
-                            <div><input type="radio" name="opt_player" value="1" class="accent-primary" checked> 1人で (vs CPU)</div>
+                            <i data-lucide="${mode === 'matching' || mode === 'listening_drill' ? 'user' : 'bot'}" class="w-5 h-5 text-slate-500"></i>
+                            <div><input type="radio" name="opt_player" value="1" class="accent-primary" checked> ${label1}</div>
                         </label>
                         <label class="flex-1 bg-surface border border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-primary transition-colors font-bold text-sm text-slate-700 shadow-sm">
                             <i data-lucide="users" class="w-5 h-5 text-red-500"></i>
                             <div><input type="radio" name="opt_player" value="2" class="accent-primary"> 2人で (対人戦)</div>
                         </label>
                     </div>`;
-            } else {
-                container.innerHTML = `<p class="text-sm font-bold text-slate-600 text-center py-4">現在選択中のカテゴリー「${currentCategory}」から出題します。</p>`;
             }
             lucide.createIcons(); showModal('modal-setup');
         }
 
         function confirmSetup() {
             let source = wordData.filter(w => w.cat === currentCategory);
-            if(source.length < 10) { closeModal('modal-setup'); showResult("単語不足", "10単語以上あるカテゴリーを選択してください。"); return; }
+            const runConfig = { mode: pendingMode, category: currentCategory, filter: 'all', player: '1', typingDifficulty: tdDifficulty, learnType: 'normal' };
+            if(pendingMode !== 'vs' && pendingMode !== 'invader') {
+                const filter = document.querySelector('input[name="opt_filter"]:checked')?.value || 'all';
+                runConfig.filter = filter;
+                if(filter === 'tx') source = source.filter(w => wordStatus[w.en] === 't' || wordStatus[w.en] === 'x');
+                if(filter === 'x') source = source.filter(w => wordStatus[w.en] === 'x');
+            }
+            if(pendingMode === 'learn' && document.querySelector('input[name="opt_learn_type"]:checked')?.value === 'review') {
+                runConfig.learnType = 'review';
+                const reviewWords = learnReviewLog
+                    .filter(item => item.cat === currentCategory)
+                    .map(item => wordData.find(w => w.en === item.en && w.cat === item.cat))
+                    .filter(Boolean);
+                source = reviewWords;
+            }
+            const requirements = { learn: 1, '4choice': 4, typing_drill: 1, listening_drill: 6, matching: 6, timetrial: 10, vs: 10, invader: 10 };
+            const req = requirements[pendingMode] || 1;
+            if(source.length < req) { closeModal('modal-setup'); showResult("単語不足", `条件に合う単語が ${req} 個以上必要です。（現在: ${source.length}個）`, "", "info"); return; }
             if(pendingMode === 'timetrial' && typeof Sortable === 'undefined') {
                 closeModal('modal-setup');
                 showResult("読み込みエラー", "タイムトライアル用ライブラリを読み込めませんでした。通信状態を確認して、ページを再読み込みしてください。", "", "info");
@@ -1071,12 +1337,22 @@
             }
             if(!useStamina()) { closeModal('modal-setup'); return; }
             closeModal('modal-setup');
+            lastRunConfig = runConfig;
+            window.localStorage.setItem('wm_pro_last_run', JSON.stringify(lastRunConfig));
 
             if(pendingMode === 'learn') { navTo('learn'); startLearnMode(source); }
             else if(pendingMode === '4choice') { navTo('4choice'); init4Choice(source); }
-            else if(pendingMode === 'typing_drill') { navTo('typing_drill'); initTypingDrill(source); }
-            else if(pendingMode === 'listening_drill') { navTo('listening_drill'); initListeningDrill(source); }
-            else if(pendingMode === 'matching') { navTo('matching'); initMatching(source); }
+            else if(pendingMode === 'typing_drill') { tdDifficulty = document.querySelector('input[name="opt_typing_diff"]:checked')?.value || 'hard'; lastRunConfig.typingDifficulty = tdDifficulty; window.localStorage.setItem('wm_pro_last_run', JSON.stringify(lastRunConfig)); navTo('typing_drill'); initTypingDrill(source); }
+            else if(pendingMode === 'listening_drill') {
+                const players = document.querySelector('input[name="opt_player"]:checked')?.value || '1';
+                lastRunConfig.player = players; window.localStorage.setItem('wm_pro_last_run', JSON.stringify(lastRunConfig));
+                if(players === '2') { navTo('listening-vs'); initListeningVs(source); } else { navTo('listening_drill'); initListeningDrill(source); }
+            }
+            else if(pendingMode === 'matching') {
+                const players = document.querySelector('input[name="opt_player"]:checked')?.value || '1';
+                lastRunConfig.player = players; window.localStorage.setItem('wm_pro_last_run', JSON.stringify(lastRunConfig));
+                if(players === '2') { navTo('matching-vs'); initMatchingVs(source); } else { navTo('matching'); initMatching(source); }
+            }
             else if(pendingMode === 'timetrial') { navTo('timetrial'); initTimeTrial(source); }
             else if(pendingMode === 'vs') { navTo('vs'); startVsKaruta(document.querySelector('input[name="opt_player"]:checked').value === '1', source); }
             else if(pendingMode === 'invader') { navTo('invader'); startInvader(document.querySelector('input[name="opt_player"]:checked').value === '1', source); }
@@ -1088,7 +1364,39 @@
             if(type === 'win') { iconBox.className = "mx-auto w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-4"; iconBox.innerHTML = '<i data-lucide="check-circle" class="w-8 h-8"></i>'; }
             else if (type === 'vs') { iconBox.className = "mx-auto w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4"; iconBox.innerHTML = '<i data-lucide="award" class="w-8 h-8"></i>'; }
             else { iconBox.className = "mx-auto w-16 h-16 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center mb-4"; iconBox.innerHTML = '<i data-lucide="info" class="w-8 h-8"></i>'; }
+            const replayBtn = document.getElementById('res-replay-btn');
+            if(lastRunConfig && type !== 'info') replayBtn.classList.remove('hidden'); else replayBtn.classList.add('hidden');
             showModal('modal-result'); lucide.createIcons(); updateDashboard();
+        }
+        function getReplaySource(config) {
+            let source = wordData.filter(w => w.cat === config.category);
+            if(config.filter === 'tx') source = source.filter(w => wordStatus[w.en] === 't' || wordStatus[w.en] === 'x');
+            if(config.filter === 'x') source = source.filter(w => wordStatus[w.en] === 'x');
+            if(config.mode === 'learn' && config.learnType === 'review') {
+                source = learnReviewLog
+                    .filter(item => item.cat === config.category)
+                    .map(item => wordData.find(w => w.en === item.en && w.cat === item.cat))
+                    .filter(Boolean);
+            }
+            return source;
+        }
+        function replayLastMode() {
+            if(!lastRunConfig) return;
+            closeModal('modal-result');
+            currentCategory = lastRunConfig.category;
+            window.localStorage.setItem('wm_pro_last_category', currentCategory);
+            renderCategoryFilter();
+            const source = getReplaySource(lastRunConfig);
+            if(source.length === 0) { showResult("単語不足", "同じ条件で出題できる単語がありません。", "", "info"); return; }
+            if(!useStamina()) return;
+            if(lastRunConfig.mode === 'learn') { navTo('learn'); startLearnMode(source); }
+            else if(lastRunConfig.mode === '4choice') { navTo('4choice'); init4Choice(source); }
+            else if(lastRunConfig.mode === 'typing_drill') { tdDifficulty = lastRunConfig.typingDifficulty || 'hard'; navTo('typing_drill'); initTypingDrill(source); }
+            else if(lastRunConfig.mode === 'listening_drill') { if(lastRunConfig.player === '2') { navTo('listening-vs'); initListeningVs(source); } else { navTo('listening_drill'); initListeningDrill(source); } }
+            else if(lastRunConfig.mode === 'matching') { if(lastRunConfig.player === '2') { navTo('matching-vs'); initMatchingVs(source); } else { navTo('matching'); initMatching(source); } }
+            else if(lastRunConfig.mode === 'timetrial') { navTo('timetrial'); initTimeTrial(source); }
+            else if(lastRunConfig.mode === 'vs') { navTo('vs'); startVsKaruta(lastRunConfig.player !== '2', source); }
+            else if(lastRunConfig.mode === 'invader') { navTo('invader'); startInvader(lastRunConfig.player !== '2', source); }
         }
 
         function renderVocabulary() {
@@ -1104,11 +1412,12 @@
                 const xCl = st === 'x' ? 'bg-red-100 border-red-500 text-red-700' : 'bg-surface border-slate-200 text-slate-400 hover:bg-slate-50';
                 const card = document.createElement('div');
                 card.className = "bg-surface rounded-xl p-3 border border-slate-200 flex justify-between items-center shadow-sm";
+                const safeEn = JSON.stringify(w.en);
                 card.innerHTML = `<div class="flex flex-col truncate pr-2 flex-1"><span class="text-sm font-bold text-slate-800">${w.en}</span><span class="text-xs text-slate-500">${w.jp}</span></div>
                     <div class="flex items-center gap-1">
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] border ${oCl}">◯</div>
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] border ${tCl}">△</div>
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] border ${xCl}">×</div>
+                        <button onclick='setWordStatus(${safeEn}, "o")' class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] border ${oCl}">◯</button>
+                        <button onclick='setWordStatus(${safeEn}, "t")' class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] border ${tCl}">△</button>
+                        <button onclick='setWordStatus(${safeEn}, "x")' class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] border ${xCl}">×</button>
                     </div>`;
                 grid.appendChild(card);
             });
@@ -1188,7 +1497,7 @@
                             Array.from(container.children).forEach(b => { b.onclick = null; b.classList.add('pointer-events-none'); });
                             setTimeout(() => { learnIndex++; renderLearnProgress(); renderLearnPhase(); }, learnPhase === 2 ? 1100 : 800);
                         } else {
-                            playSound('wrong'); learnMistakes.add(target.en); recordError(target.en);
+                            playSound('wrong'); learnMistakes.add(target.en); recordError(target.en); recordLearnReviewWord(target);
                             btn.classList.add('bg-slate-50', 'text-slate-300', 'border-slate-200', 'pointer-events-none');
                             renderLearnProgress();
                         }
@@ -1263,7 +1572,7 @@
                 document.getElementById('learn-typ-feedback').innerHTML = '<span class="text-secondary animate-pop flex items-center gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent</span>';
                 setTimeout(() => { learnIndex++; renderLearnProgress(); renderLearnPhase(); }, 1200);
             } else {
-                playSound('wrong'); learnMistakes.add(learnTargets[learnIndex].en); recordError(learnTargets[learnIndex].en);
+                playSound('wrong'); learnMistakes.add(learnTargets[learnIndex].en); recordError(learnTargets[learnIndex].en); recordLearnReviewWord(learnTargets[learnIndex]);
                 input.value = ''; updateLearnTypDisplay(); renderLearnProgress();
                 let ec = document.getElementById('learn-typ-hint-container').children[0];
                 ec.classList.add('bg-red-50', 'border-red-400'); setTimeout(() => ec.classList.remove('bg-red-50', 'border-red-400'), 300);
@@ -1313,8 +1622,28 @@
         }
 
         // ================== DRILL: TYPING (Hard) ==================
-        let tdIndex = 0, tdTargets = [], tdHintCount = 0;
+        let tdIndex = 0, tdTargets = [], tdHintCount = 0, tdEasyTarget = null;
         function initTypingDrill(source) { tdTargets = shuffle(source).slice(0, 5); tdIndex = 0; renderTypingDrill(); }
+        function setupTdEasy(word) {
+            const clean = word.replace(/\[.*?\]/g, '').trim();
+            const valid = [];
+            for(let i=0; i<clean.length; i++) if(clean[i] !== ' ' && clean[i] !== '-') valid.push(i);
+            const indices = shuffle(valid).slice(0, Math.min(2, valid.length)).sort((a,b)=>a-b);
+            const displayArr = clean.split(''); let ans = '';
+            indices.forEach(i => { ans += displayArr[i]; displayArr[i] = '_'; });
+            for(let i=0; i<displayArr.length; i++) if(displayArr[i] === ' ') displayArr[i] = '&nbsp;&nbsp;';
+            tdEasyTarget = { full: clean, displayArr, ans: ans.toLowerCase() };
+            updateTdEasyDisplay();
+        }
+        function updateTdEasyDisplay() {
+            if(tdDifficulty !== 'easy' || !tdEasyTarget) return;
+            const val = document.getElementById('td-input').value;
+            const arr = [...tdEasyTarget.displayArr]; let vIdx = 0;
+            for(let i=0; i<arr.length; i++) {
+                if(arr[i] === '_') arr[i] = vIdx < val.length ? `<span class="text-secondary border-b-[3px] border-secondary">${val[vIdx++]}</span>` : '_';
+            }
+            document.getElementById('td-easy-hint-container').innerHTML = `<div class="text-3xl font-mono font-bold tracking-widest text-primary bg-primaryLight/30 py-3 px-6 rounded-xl inline-block border border-primaryLight shadow-sm">${arr.join('')}</div>`;
+        }
         function renderTypingDrill() {
             if(tdIndex >= 5) { playSound('match'); showResult("Typing Completed", "5問クリアしました。", "", "win"); addExp(10); return; }
             tdHintCount = 0; document.getElementById('td-current').innerText = tdIndex + 1;
@@ -1322,7 +1651,14 @@
             
             const input = document.getElementById('td-input');
             input.value = ''; input.disabled = false;
-            input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-slate-200 rounded-xl mb-3 outline-none bg-surface text-slate-800 shadow-sm focus:border-primary";
+            document.getElementById('td-easy-hint-container').innerHTML = '';
+            if(tdDifficulty === 'easy') {
+                input.className = "w-0 h-0 opacity-0 absolute -z-10";
+                setupTdEasy(target.en);
+            } else {
+                tdEasyTarget = null;
+                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-slate-200 rounded-xl mb-3 outline-none bg-surface text-slate-800 shadow-sm focus:border-primary";
+            }
             
             document.getElementById('td-feedback').innerHTML = '';
             document.getElementById('td-hint-btn').innerHTML = '<i data-lucide="lightbulb" class="w-4 h-4 text-slate-400"></i> ヒント'; document.getElementById('td-hint-btn').classList.remove('hidden');
@@ -1334,11 +1670,11 @@
                 const rowDiv = document.createElement('div'); rowDiv.className = 'flex justify-center gap-1 md:gap-1.5 mb-1 md:mb-1.5 w-full';
                 if (rIndex === 2) {
                     const bsBtn = document.createElement('button'); bsBtn.className = 'bg-surface border border-slate-200 text-slate-600 rounded-lg font-bold px-3 py-3 active:bg-slate-50 transition-colors shadow-sm cursor-pointer';
-                    bsBtn.innerHTML = '<i data-lucide="delete" class="w-5 h-5"></i>'; bsBtn.onclick = () => { initAudio(); const input = document.getElementById('td-input'); input.value = input.value.slice(0, -1); }; rowDiv.appendChild(bsBtn);
+                    bsBtn.innerHTML = '<i data-lucide="delete" class="w-5 h-5"></i>'; bsBtn.onclick = () => { initAudio(); const input = document.getElementById('td-input'); input.value = input.value.slice(0, -1); updateTdEasyDisplay(); }; rowDiv.appendChild(bsBtn);
                 }
                 row.forEach(char => {
                     const btn = document.createElement('button'); btn.className = 'bg-surface border border-slate-200 text-slate-700 rounded-lg font-bold flex-1 py-3 active:bg-slate-50 transition-colors max-w-[45px] text-base md:text-lg shadow-sm cursor-pointer';
-                    btn.innerText = char === ' ' ? '␣' : char; btn.onclick = () => { initAudio(); document.getElementById('td-input').value += char; }; rowDiv.appendChild(btn);
+                    btn.innerText = char === ' ' ? '␣' : char; btn.onclick = () => { initAudio(); document.getElementById('td-input').value += char; updateTdEasyDisplay(); }; rowDiv.appendChild(btn);
                 });
                 if (rIndex === 2) {
                     const entBtn = document.createElement('button'); entBtn.className = 'bg-primary text-white rounded-lg font-bold px-4 py-3 active:bg-primaryHover transition-colors text-sm shadow-sm border border-primary cursor-pointer';
@@ -1351,33 +1687,43 @@
             const input = document.getElementById('td-input'); const target = tdTargets[tdIndex];
             if(input.disabled) return;
             const ans = input.value.replace(/\s+/g, ' ').trim().toLowerCase();
-            const correct = target.en.replace(/\[.*?\]/g, '').trim().toLowerCase();
+            const correct = tdDifficulty === 'easy' && tdEasyTarget ? tdEasyTarget.ans : target.en.replace(/\[.*?\]/g, '').trim().toLowerCase();
             if(ans.replace(/\s+/g, '') === correct.replace(/\s+/g, '')) {
                 playSound('correct'); playAudio(target.en);
-                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-secondary bg-emerald-50 text-secondary rounded-xl mb-3 outline-none shadow-sm";
+                if(tdDifficulty === 'easy') document.getElementById('td-easy-hint-container').children[0]?.classList.add('bg-emerald-50', 'border-secondary');
+                else input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-secondary bg-emerald-50 text-secondary rounded-xl mb-3 outline-none shadow-sm";
                 document.getElementById('td-feedback').innerHTML = '<span class="text-secondary animate-pop flex items-center gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent</span>';
                 document.getElementById('td-hint-btn').classList.add('hidden'); lucide.createIcons(); input.disabled = true;
                 setTimeout(() => { tdIndex++; renderTypingDrill(); }, 1200);
             } else {
                 playSound('wrong'); recordError(target.en);
-                input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
-                input.classList.add('animate-pulse'); setTimeout(()=> input.classList.remove('animate-pulse'), 300);
+                if(tdDifficulty === 'easy') {
+                    const easy = document.getElementById('td-easy-hint-container').children[0];
+                    easy?.classList.add('animate-pulse', 'bg-red-50', 'border-red-400');
+                    setTimeout(()=> easy?.classList.remove('animate-pulse', 'bg-red-50', 'border-red-400'), 300);
+                } else {
+                    input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
+                    input.classList.add('animate-pulse'); setTimeout(()=> input.classList.remove('animate-pulse'), 300);
+                }
                 document.getElementById('td-feedback').innerHTML = '<span class="text-red-500 flex items-center gap-1"><i data-lucide="alert-circle" class="w-5 h-5"></i> Miss</span>';
-                lucide.createIcons(); input.value = '';
+                lucide.createIcons(); input.value = ''; updateTdEasyDisplay();
             }
         }
         function handleTdHint() {
             initAudio(); const input = document.getElementById('td-input'); const target = tdTargets[tdIndex];
             if(input.disabled) return;
-            tdHintCount++; const correct = target.en.replace(/\[.*?\]/g, '').trim();
+            tdHintCount++; const correct = tdDifficulty === 'easy' && tdEasyTarget ? tdEasyTarget.ans : target.en.replace(/\[.*?\]/g, '').trim();
             if(tdHintCount >= 4 || tdHintCount >= correct.length) {
                 playSound('wrong'); recordError(target.en); playAudio(target.en);
-                input.value = correct; input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
+                input.value = correct;
+                if(tdDifficulty === 'easy') updateTdEasyDisplay();
+                else input.className = "w-full max-w-md text-center text-2xl font-bold p-4 border-2 border-red-400 bg-red-50 text-red-600 rounded-xl mb-3 outline-none shadow-sm";
                 document.getElementById('td-feedback').innerHTML = '<span class="text-red-600 flex items-center justify-start gap-1 text-sm"><i data-lucide="info" class="w-4 h-4"></i> 正解はコチラ</span>';
                 document.getElementById('td-hint-btn').classList.add('hidden'); lucide.createIcons(); input.disabled = true;
                 setTimeout(() => { tdIndex++; renderTypingDrill(); }, 2000);
             } else {
                 input.value = correct.substring(0, tdHintCount);
+                updateTdEasyDisplay();
                 if(tdHintCount === 3 || tdHintCount === correct.length -1) { document.getElementById('td-hint-btn').innerHTML = '<i data-lucide="flag" class="w-4 h-4 text-slate-400"></i> ギブアップ'; lucide.createIcons(); }
             }
         }
@@ -1432,6 +1778,95 @@
             playSeq(0);
         }
 
+        let lvsData = [], lvsTargets = [], lvsP1Score = 0, lvsP2Score = 0, lvsSelectedP1 = [], lvsSelectedP2 = [], lvsLockAll = false, lvsLockP1 = false, lvsLockP2 = false;
+        function initListeningVs(source) {
+            lvsData = shuffle(source);
+            if(lvsData.length < 6) lvsData = lvsData.concat(shuffle(wordData.filter(w => !lvsData.includes(w))));
+            lvsP1Score = 0; lvsP2Score = 0; updateLvsUI(); nextLvsRound();
+        }
+        function endLvsEarly() { clearAllTimers(); navTo('dashboard'); }
+        function updateLvsUI() {
+            document.getElementById('lvs-score-p1').innerText = lvsP1Score;
+            document.getElementById('lvs-score-p2').innerText = lvsP2Score;
+        }
+        function nextLvsRound() {
+            lvsLockAll = false; lvsLockP1 = false; lvsLockP2 = false; lvsSelectedP1 = []; lvsSelectedP2 = [];
+            document.getElementById('lvs-lock-p1').classList.add('hidden');
+            document.getElementById('lvs-lock-p2').classList.add('hidden');
+            updateLvsSlots(1); updateLvsSlots(2);
+            const pool = shuffle(lvsData);
+            lvsTargets = pool.slice(0, 3);
+            const choices = shuffle([...lvsTargets, ...pool.slice(3, 6)]);
+            renderLvsChoices('lvs-choices-p1', choices, 1);
+            renderLvsChoices('lvs-choices-p2', choices, 2);
+            setTimeout(() => playLvsAudio(), 800);
+        }
+        function renderLvsChoices(id, choices, player) {
+            const container = document.getElementById(id); container.innerHTML = '';
+            choices.forEach(c => {
+                const btn = document.createElement('button');
+                btn.className = 'bg-surface border-2 border-slate-200 text-slate-800 font-bold py-3 px-1 rounded-xl text-xs md:text-sm shadow-sm active:scale-95 transition-transform overflow-hidden break-words cursor-pointer';
+                btn.innerText = c.jp; btn.onclick = () => { initAudio(); handleLvsClick(c, player, btn); };
+                container.appendChild(btn);
+            });
+        }
+        function playLvsAudio() {
+            initAudio(); const btn = document.getElementById('lvs-audio-btn'); btn.classList.add('animate-pulse', 'bg-primaryHover');
+            function playSeq(idx) {
+                if(idx >= lvsTargets.length) { btn.classList.remove('animate-pulse', 'bg-primaryHover'); return; }
+                playAudio(lvsTargets[idx].en, () => setTimeout(() => playSeq(idx + 1), 600));
+            }
+            playSeq(0);
+        }
+        function manualPlayLvsAudio() { if(!lvsLockAll) playLvsAudio(); }
+        function handleLvsClick(c, player, btn) {
+            if(lvsLockAll || (player === 1 && lvsLockP1) || (player === 2 && lvsLockP2)) return;
+            const selected = player === 1 ? lvsSelectedP1 : lvsSelectedP2;
+            if(selected.length >= 3) return;
+            btn.classList.add('opacity-0', 'pointer-events-none');
+            selected.push({ choice: c, btn });
+            updateLvsSlots(player);
+            if(selected.length === 3) checkLvs(player);
+        }
+        function updateLvsSlots(player) {
+            const slots = document.getElementById('lvs-slots-p' + player).children;
+            const selected = player === 1 ? lvsSelectedP1 : lvsSelectedP2;
+            const border = player === 1 ? 'border-primary' : 'border-red-500';
+            const bg = player === 1 ? 'bg-primary' : 'bg-red-500';
+            for(let i=0; i<3; i++) {
+                if(selected[i]) {
+                    slots[i].innerText = selected[i].choice.jp;
+                    slots[i].className = `w-1/3 max-w-[120px] h-11 border ${border} rounded-lg flex items-center justify-center text-[10px] md:text-xs font-bold text-white ${bg} shadow-md truncate px-1`;
+                } else {
+                    slots[i].innerText = '';
+                    slots[i].className = `w-1/3 max-w-[120px] h-11 border-2 border-dashed ${border} rounded-lg flex items-center justify-center bg-surface opacity-50`;
+                }
+            }
+        }
+        function checkLvs(player) {
+            const selected = player === 1 ? lvsSelectedP1 : lvsSelectedP2;
+            const isCorrect = selected.every((item, i) => item.choice.en === lvsTargets[i].en);
+            if(isCorrect) {
+                playSound('correct'); lvsLockAll = true;
+                if(player === 1) lvsP1Score++; else lvsP2Score++;
+                updateLvsUI();
+                if(lvsP1Score >= 5 || lvsP2Score >= 5) setTimeout(endLvsMatch, 1000);
+                else setTimeout(nextLvsRound, 1000);
+            } else {
+                playSound('wrong');
+                if(player === 1) { lvsLockP1 = true; document.getElementById('lvs-lock-p1').classList.remove('hidden'); }
+                else { lvsLockP2 = true; document.getElementById('lvs-lock-p2').classList.remove('hidden'); }
+                if(lvsLockP1 && lvsLockP2) { lvsLockAll = true; setTimeout(nextLvsRound, 1200); }
+            }
+        }
+        function endLvsMatch() {
+            playSound('match'); addExp(5);
+            const title = lvsP1Score >= 5 ? "Player 1 Wins!" : "Player 2 Wins!";
+            const extra = `<div class="flex justify-center gap-6 mt-2 w-full"><div class="text-center"><div class="text-xs font-bold text-slate-400">P1 SCORE</div><div class="text-3xl font-extrabold text-primary">${lvsP1Score}</div></div><div class="text-center"><div class="text-xs font-bold text-slate-400">P2 SCORE</div><div class="text-3xl font-extrabold text-red-500">${lvsP2Score}</div></div></div>`;
+            navTo('dashboard');
+            showResult(title, "白熱のリスニングバトルでした！", extra, "vs");
+        }
+
         // ================== TIME ATTACK: MATCHING ==================
         let mFirstCard = null, mLock = false, mPairs = 0, mStartTime = 0, mTimerInterval;
         function initMatching(source) {
@@ -1465,6 +1900,56 @@
             } else { mLock = true; setTimeout(() => { mFirstCard.classList.remove('flipped'); elCard.classList.remove('flipped'); mFirstCard = null; mLock = false; }, 800); }
         }
         function endMatchingEarly() { clearInterval(mTimerInterval); navTo('dashboard'); }
+
+        let mvsPairs = {1: 0, 2: 0}, mvsFirstCard = {1: null, 2: null}, mvsLock = {1: false, 2: false}, mvsDone = false;
+        function initMatchingVs(source) {
+            mvsDone = false;
+            document.getElementById('mvs-win-p1').classList.add('hidden');
+            document.getElementById('mvs-win-p2').classList.add('hidden');
+            let selected = shuffle(source).slice(0, 4);
+            if(selected.length < 4) selected = selected.concat(shuffle(wordData.filter(w => !selected.includes(w))).slice(0, 4 - selected.length));
+            let cardsP1 = [], cardsP2 = [];
+            selected.forEach(v => {
+                cardsP1.push({ text: v.en, pair: v.jp, en: v.en }); cardsP1.push({ text: v.jp, pair: v.en, en: v.en });
+                cardsP2.push({ text: v.en, pair: v.jp, en: v.en }); cardsP2.push({ text: v.jp, pair: v.en, en: v.en });
+            });
+            mvsPairs = {1: 0, 2: 0}; mvsFirstCard = {1: null, 2: null}; mvsLock = {1: false, 2: false};
+            renderMvsGrid('mvs-grid-p1', shuffle(cardsP1), 1);
+            renderMvsGrid('mvs-grid-p2', shuffle(cardsP2), 2);
+            lucide.createIcons();
+        }
+        function renderMvsGrid(id, cards, player) {
+            const grid = document.getElementById(id); grid.innerHTML = '';
+            cards.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'card w-full h-16 md:h-20 cursor-pointer relative shadow-sm';
+                div.dataset.pair = c.pair; div.dataset.text = c.text; div.dataset.en = c.en;
+                const fs = c.text.length > 10 ? 'text-[10px]' : 'text-xs md:text-sm';
+                div.innerHTML = `<div class="card-inner"><div class="card-front"><i data-lucide="help-circle" class="w-4 h-4 opacity-30 text-white"></i></div><div class="card-back ${fs}">${c.text}</div></div>`;
+                div.onclick = () => { initAudio(); flipMvsCard(div, player); };
+                grid.appendChild(div);
+            });
+        }
+        function flipMvsCard(el, player) {
+            if(mvsDone || mvsLock[player] || el === mvsFirstCard[player] || el.classList.contains('matched') || el.classList.contains('flipped')) return;
+            el.classList.add('flipped');
+            if(!mvsFirstCard[player]) { mvsFirstCard[player] = el; return; }
+            if(mvsFirstCard[player].dataset.pair === el.dataset.text) {
+                mvsLock[player] = true;
+                setTimeout(() => {
+                    playSound('match'); mvsFirstCard[player].classList.add('matched'); el.classList.add('matched');
+                    recordSuccess(el.dataset.en); mvsFirstCard[player] = null; mvsLock[player] = false; mvsPairs[player]++; addExp(1);
+                    if(mvsPairs[player] >= 4) {
+                        mvsDone = true; playSound('correct'); addExp(5);
+                        document.getElementById(`mvs-win-p${player}`).classList.remove('hidden');
+                        setTimeout(() => navTo('dashboard'), 2500);
+                    }
+                }, 300);
+            } else {
+                mvsLock[player] = true;
+                setTimeout(() => { mvsFirstCard[player].classList.remove('flipped'); el.classList.remove('flipped'); mvsFirstCard[player] = null; mvsLock[player] = false; }, 800);
+            }
+        }
 
         // ================== TIME ATTACK: TIME TRIAL ==================
         let ttStartTime = 0, ttTimerInterval, ttSortables = [];
@@ -1773,7 +2258,7 @@
 
         function endInvaderMatch() {
             playSound('match'); invPlaying = false; addExp(10);
-            let title = "", desc = "", extra = `<div class="flex justify-center gap-6 mt-2 w-full"><div class="text-center"><div class="text-xs font-bold text-slate-400">P1 SCORE</div><div class="text-3xl font-extrabold text-primary">${invScores[1]}</div></div><div class="text-center"><div class="text-xs font-bold text-slate-400">P2 SCORE</div><div class="text-3xl font-extrabold text-red-500">${invScores[2]}</div></div></div>`;
+            let title = "", desc = "", extra = `<div class="flex justify-center gap-6 mt-2 w-full"><div class="text-center"><div class="text-xs font-bold text-slate-400">LEFT / P2</div><div class="text-3xl font-extrabold text-red-500">${invScores[2]}</div></div><div class="text-center"><div class="text-xs font-bold text-slate-400">RIGHT / P1</div><div class="text-3xl font-extrabold text-primary">${invScores[1]}</div></div></div>`;
             if(invIsCpu) {
                 if(invScores[1] >= invScores[2]) {
                     title = "You Win!!";

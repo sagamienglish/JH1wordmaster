@@ -296,6 +296,17 @@
             #screen-dashboard .gap-4 { gap: 0.8rem !important; }
         }
 
+        @media (max-width: 767px) {
+            main {
+                padding-bottom: calc(env(safe-area-inset-bottom) + 8.5rem) !important;
+                scroll-padding-bottom: calc(env(safe-area-inset-bottom) + 8.5rem);
+            }
+            #screen-dashboard,
+            #screen-vocabulary {
+                padding-bottom: 2rem;
+            }
+        }
+
         @keyframes pop { 0% { transform: scale(0.95); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         .animate-pop { animation: pop 0.3s ease-out; }
         

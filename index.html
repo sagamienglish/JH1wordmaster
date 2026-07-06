@@ -866,7 +866,7 @@
     </div>
 
     <div id="modal-result" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-surface rounded-2xl p-8 w-full max-w-sm text-center shadow-2xl animate-pop border border-slate-100 relative overflow-hidden">
+        <div class="bg-surface rounded-2xl p-8 w-full max-w-md text-center shadow-2xl animate-pop border border-slate-100 relative overflow-hidden">
             <div id="res-icon" class="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 relative z-10"></div>
             <h2 id="res-title" class="text-2xl font-extrabold text-slate-800 mb-2 relative z-10"></h2>
             <p id="res-desc" class="text-slate-500 mb-6 text-sm relative z-10 font-bold"></p>
@@ -1375,6 +1375,10 @@
             closeModal('modal-result');
             resetMatchingVsSeries();
             resetInvaderSeries();
+            if(activeScreen !== 'dashboard') navTo('dashboard');
+        }
+        function escapeHtml(text) {
+            return String(text).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
         }
         function showWinnerBurst(winnerName, winnerPlayer, subText = 'BATTLE CLEAR', kicker = 'WINNER') {
             const burst = document.getElementById('global-winner-burst');
@@ -1625,10 +1629,11 @@
         }
 
         // ================== LEARN MODE (Comprehensive) ==================
-        let learnTargets = [], learnIndex = 0, learnPhase = 1, learnMistakes = new Set();
+        let learnTargets = [], learnSessionTargets = [], learnIndex = 0, learnPhase = 1, learnMistakes = new Set(), learnSessionMistakes = new Set();
         function startLearnMode(source) {
             learnTargets = shuffle(source).slice(0, 10);
-            learnIndex = 0; learnPhase = 1; learnMistakes = new Set();
+            learnSessionTargets = [...learnTargets];
+            learnIndex = 0; learnPhase = 1; learnMistakes = new Set(); learnSessionMistakes = new Set();
             renderLearnProgress(); renderLearnPhase();
         }
         
@@ -1651,15 +1656,19 @@
             if(learnIndex >= learnTargets.length) {
                 if(learnPhase === 3) {
                     if(learnMistakes.size > 0) {
-                        learnTargets = Array.from(learnMistakes).map(en => wordData.find(w => w.en === en));
+                        learnTargets = Array.from(learnMistakes)
+                            .map(en => learnSessionTargets.find(w => w.en === en) || wordData.find(w => w.en === en))
+                            .filter(Boolean);
                         learnIndex = 0; learnPhase = 1; learnMistakes = new Set();
                         showResult("Review Time", "間違えた問題の復習をします！", "", "info");
                         setTimeout(() => { closeModal('modal-result'); renderLearnProgress(); renderLearnPhase(); }, 1500);
                         return;
                     } else {
                         playSound('match'); addExp(30);
-                        learnTargets.forEach(w => recordSuccess(w.en));
-                        showResult("Perfect Mastery!", "10単語すべてマスターしました！", "", "win"); return;
+                        learnSessionTargets.forEach(w => recordSuccess(w.en));
+                        const total = learnSessionTargets.length;
+                        const desc = `${total}単語の学習が完了しました。`;
+                        showResult("Perfect Mastery!", desc, buildLearnSummaryHtml(), "win"); return;
                     }
                 } else { learnIndex = 0; learnPhase++; renderLearnProgress(); }
             }
@@ -1697,7 +1706,7 @@
                             Array.from(container.children).forEach(b => { b.onclick = null; b.classList.add('pointer-events-none'); });
                             setTimeout(() => { learnIndex++; renderLearnProgress(); renderLearnPhase(); }, learnPhase === 2 ? 1100 : 800);
                         } else {
-                            playSound('wrong'); learnMistakes.add(target.en); recordError(target.en); recordLearnReviewWord(target);
+                            playSound('wrong'); learnMistakes.add(target.en); learnSessionMistakes.add(target.en); recordError(target.en); recordLearnReviewWord(target);
                             btn.classList.add('bg-slate-50', 'text-slate-300', 'border-slate-200', 'pointer-events-none');
                             renderLearnProgress();
                         }
@@ -1772,11 +1781,48 @@
                 document.getElementById('learn-typ-feedback').innerHTML = '<span class="text-secondary animate-pop flex items-center gap-1"><i data-lucide="check-circle" class="w-5 h-5"></i> Excellent</span>';
                 setTimeout(() => { learnIndex++; renderLearnProgress(); renderLearnPhase(); }, 1200);
             } else {
-                playSound('wrong'); learnMistakes.add(learnTargets[learnIndex].en); recordError(learnTargets[learnIndex].en); recordLearnReviewWord(learnTargets[learnIndex]);
+                playSound('wrong'); learnMistakes.add(learnTargets[learnIndex].en); learnSessionMistakes.add(learnTargets[learnIndex].en); recordError(learnTargets[learnIndex].en); recordLearnReviewWord(learnTargets[learnIndex]);
                 input.value = ''; updateLearnTypDisplay(); renderLearnProgress();
                 let ec = document.getElementById('learn-typ-hint-container').children[0];
                 ec.classList.add('bg-red-50', 'border-red-400'); setTimeout(() => ec.classList.remove('bg-red-50', 'border-red-400'), 300);
             }
+        }
+
+        function buildLearnSummaryHtml() {
+            const missed = learnSessionTargets.filter(w => learnSessionMistakes.has(w.en));
+            const firstTry = learnSessionTargets.filter(w => !learnSessionMistakes.has(w.en));
+            const renderList = (items, emptyText, tone) => {
+                if(items.length === 0) return `<div class="text-center text-xs font-bold text-slate-400 py-3">${emptyText}</div>`;
+                return `<div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">${items.map(w => `
+                    <div class="flex items-center justify-between gap-3 rounded-lg border ${tone === 'mistake' ? 'border-orange-100 bg-orange-50/70' : 'border-emerald-100 bg-emerald-50/70'} px-3 py-2">
+                        <div class="min-w-0">
+                            <div class="font-black text-slate-800 text-sm truncate">${escapeHtml(w.en)}</div>
+                            <div class="text-[11px] font-bold text-slate-500 truncate">${escapeHtml(w.jp)}</div>
+                        </div>
+                        <i data-lucide="${tone === 'mistake' ? 'triangle-alert' : 'check'}" class="w-4 h-4 shrink-0 ${tone === 'mistake' ? 'text-orange-500' : 'text-emerald-500'}"></i>
+                    </div>`).join('')}</div>`;
+            };
+            return `
+                <div class="w-full space-y-3">
+                    <div class="grid grid-cols-2 gap-2 text-center">
+                        <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                            <div class="text-[11px] font-black text-emerald-600">最初から正解</div>
+                            <div class="text-3xl font-black text-slate-800">${firstTry.length}</div>
+                        </div>
+                        <div class="rounded-xl bg-orange-50 border border-orange-100 p-3">
+                            <div class="text-[11px] font-black text-orange-600">復習した単語</div>
+                            <div class="text-3xl font-black text-slate-800">${missed.length}</div>
+                        </div>
+                    </div>
+                    <div class="w-full text-left">
+                        <div class="text-xs font-black text-orange-500 mb-1.5">間違えた単語</div>
+                        ${renderList(missed, '間違えた単語はありません', 'mistake')}
+                    </div>
+                    <div class="w-full text-left">
+                        <div class="text-xs font-black text-emerald-600 mb-1.5">最初から正解していた単語</div>
+                        ${renderList(firstTry, '最初から正解した単語はありません', 'correct')}
+                    </div>
+                </div>`;
         }
 
 

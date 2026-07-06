@@ -360,6 +360,30 @@
         .card.flipped .card-back { transform: scale(1); opacity: 1; z-index: 2; }
         .card.matched { opacity: 0; pointer-events: none; transition: opacity 0.3s 0.5s; }
 
+        .winner-burst { background: rgba(15, 23, 42, 0.82); animation: winnerFade 1.45s ease both; }
+        .winner-panel { animation: winnerSlam 0.55s cubic-bezier(0.18, 0.9, 0.22, 1.25) both; }
+        .winner-panel.p1 { background: linear-gradient(135deg, var(--color-primary), var(--color-primaryHover)); }
+        .winner-panel.p2 { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .winner-streak { animation: winnerStreak 0.7s ease-out both; }
+        .winner-streak:nth-child(2) { animation-delay: 0.06s; }
+        .winner-streak:nth-child(3) { animation-delay: 0.12s; }
+        .winner-streak:nth-child(4) { animation-delay: 0.18s; }
+        @keyframes winnerFade {
+            0% { opacity: 0; }
+            12%, 82% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        @keyframes winnerSlam {
+            0% { opacity: 0; transform: scale(0.55) rotate(-3deg); }
+            62% { opacity: 1; transform: scale(1.08) rotate(1deg); }
+            100% { opacity: 1; transform: scale(1) rotate(0deg); }
+        }
+        @keyframes winnerStreak {
+            0% { opacity: 0; transform: translateX(-130%) skewX(-18deg); }
+            35% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(130%) skewX(-18deg); }
+        }
+
         /* Sortable */
         .sortable-ghost { opacity: 0.4; }
         .sortable-drag { cursor: grabbing !important; }
@@ -728,6 +752,19 @@
         <!-- ================= Matching VS ================= -->
         <div id="screen-matching-vs" class="hidden screen fixed inset-0 z-50 bg-surface flex-col overflow-hidden">
             <button onclick="endMatchingEarly()" class="absolute left-4 top-1/2 -translate-y-1/2 bg-slate-800 text-white p-3 rounded-full hover:bg-slate-700 z-[100] transition-colors shadow-xl cursor-pointer border-2 border-slate-600"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <div id="mvs-winner-burst" class="winner-burst hidden absolute inset-0 z-[160] pointer-events-none items-center justify-center overflow-hidden">
+                <div class="absolute inset-0 flex flex-col justify-center gap-8 opacity-70">
+                    <div class="winner-streak h-3 bg-white/80 w-[150%]"></div>
+                    <div class="winner-streak h-2 bg-white/70 w-[150%]"></div>
+                    <div class="winner-streak h-3 bg-white/80 w-[150%]"></div>
+                    <div class="winner-streak h-2 bg-white/70 w-[150%]"></div>
+                </div>
+                <div id="mvs-winner-panel" class="winner-panel p1 relative z-10 rounded-2xl px-8 py-7 text-center text-white shadow-2xl border-4 border-white/80 min-w-[260px]">
+                    <div class="text-xs font-black tracking-[0.22em] opacity-90 mb-1">MATCH WINNER</div>
+                    <div id="mvs-winner-name" class="text-4xl md:text-6xl font-black leading-none">PLAYER 1</div>
+                    <div class="mt-3 text-sm md:text-base font-extrabold bg-white/20 rounded-full px-4 py-1 inline-block">4 PAIRS COMPLETE</div>
+                </div>
+            </div>
             <div class="vs-half vs-top">
                 <div class="absolute top-5 right-5 bg-surface px-4 py-2 rounded-lg font-bold text-red-600 shadow-sm z-20 border border-red-100">P2</div>
                 <div id="mvs-win-p2" class="hidden absolute inset-0 bg-red-50/90 z-30 flex items-center justify-center text-red-500 font-black text-4xl">WIN</div>
@@ -836,8 +873,22 @@
             <div id="res-extra" class="mb-6 text-left text-sm w-full flex flex-col items-center relative z-10"></div>
             <div class="grid grid-cols-2 gap-2 relative z-10">
                 <button id="res-replay-btn" onclick="replayLastMode()" class="hidden w-full bg-primary hover:bg-primaryHover text-white font-bold py-3 rounded-xl transition-colors text-sm cursor-pointer flex items-center justify-center gap-1"><i data-lucide="rotate-ccw" class="w-4 h-4 text-white"></i>もう一度</button>
-                <button onclick="closeModal('modal-result')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors text-sm cursor-pointer">閉じる</button>
+                <button onclick="closeResultModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-colors text-sm cursor-pointer">閉じる</button>
             </div>
+        </div>
+    </div>
+
+    <div id="global-winner-burst" class="winner-burst hidden fixed inset-0 z-[300] pointer-events-none items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 flex flex-col justify-center gap-8 opacity-70">
+            <div class="winner-streak h-3 bg-white/80 w-[150%]"></div>
+            <div class="winner-streak h-2 bg-white/70 w-[150%]"></div>
+            <div class="winner-streak h-3 bg-white/80 w-[150%]"></div>
+            <div class="winner-streak h-2 bg-white/70 w-[150%]"></div>
+        </div>
+        <div id="global-winner-panel" class="winner-panel p1 relative z-10 rounded-2xl px-8 py-7 text-center text-white shadow-2xl border-4 border-white/80 min-w-[260px]">
+            <div id="global-winner-kicker" class="text-xs font-black tracking-[0.22em] opacity-90 mb-1">WINNER</div>
+            <div id="global-winner-name" class="text-4xl md:text-6xl font-black leading-none">PLAYER 1</div>
+            <div id="global-winner-sub" class="mt-3 text-sm md:text-base font-extrabold bg-white/20 rounded-full px-4 py-1 inline-block">BATTLE CLEAR</div>
         </div>
     </div>
 
@@ -1300,8 +1351,10 @@
             invPlaying = false; vsLockAll = false; p1Locked = false; p2Locked = false;
         }
 
-        function navTo(tab) {
+        function navTo(tab, options = {}) {
             activeScreen = tab; clearAllTimers();
+            if(tab === 'dashboard' && !options.keepMatchSeries) resetMatchingVsSeries();
+            if(tab === 'dashboard' && !options.keepInvaderSeries) resetInvaderSeries();
             document.querySelectorAll('.screen').forEach(s => { s.classList.add('hidden'); s.classList.remove('flex'); });
             const targetScreen = document.getElementById('screen-' + tab);
             if (targetScreen) { targetScreen.classList.remove('hidden'); targetScreen.classList.add('flex'); }
@@ -1318,6 +1371,25 @@
 
         function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function closeResultModal() {
+            closeModal('modal-result');
+            resetMatchingVsSeries();
+            resetInvaderSeries();
+        }
+        function showWinnerBurst(winnerName, winnerPlayer, subText = 'BATTLE CLEAR', kicker = 'WINNER') {
+            const burst = document.getElementById('global-winner-burst');
+            const panel = document.getElementById('global-winner-panel');
+            document.getElementById('global-winner-kicker').innerText = kicker;
+            document.getElementById('global-winner-name').innerText = winnerName;
+            document.getElementById('global-winner-sub').innerText = subText;
+            panel.className = `winner-panel ${winnerPlayer === 2 ? 'p2' : 'p1'} relative z-10 rounded-2xl px-8 py-7 text-center text-white shadow-2xl border-4 border-white/80 min-w-[260px]`;
+            burst.classList.remove('hidden');
+            burst.classList.add('flex');
+            setTimeout(() => {
+                burst.classList.add('hidden');
+                burst.classList.remove('flex');
+            }, 1450);
+        }
         
         function openThemeModal() {
             const list = document.getElementById('theme-list'); list.innerHTML = '';
@@ -1474,8 +1546,16 @@
                 if(players === '2') { navTo('matching-vs'); initMatchingVs(source); } else { navTo('matching'); initMatching(source); }
             }
             else if(pendingMode === 'timetrial') { navTo('timetrial'); initTimeTrial(source); }
-            else if(pendingMode === 'vs') { navTo('vs'); startVsKaruta(document.querySelector('input[name="opt_player"]:checked').value === '1', source); }
-            else if(pendingMode === 'invader') { navTo('invader'); startInvader(document.querySelector('input[name="opt_player"]:checked').value === '1', source); }
+            else if(pendingMode === 'vs') {
+                const players = document.querySelector('input[name="opt_player"]:checked')?.value || '1';
+                lastRunConfig.player = players; window.localStorage.setItem('wm_pro_last_run', JSON.stringify(lastRunConfig));
+                navTo('vs'); startVsKaruta(players === '1', source);
+            }
+            else if(pendingMode === 'invader') {
+                const players = document.querySelector('input[name="opt_player"]:checked')?.value || '1';
+                lastRunConfig.player = players; window.localStorage.setItem('wm_pro_last_run', JSON.stringify(lastRunConfig));
+                navTo('invader'); startInvader(players === '1', source);
+            }
         }
 
         function showResult(title, desc, extraHtml = '', type = 'win') {
@@ -2021,11 +2101,16 @@
         }
         function endMatchingEarly() { clearInterval(mTimerInterval); navTo('dashboard'); }
 
-        let mvsPairs = {1: 0, 2: 0}, mvsFirstCard = {1: null, 2: null}, mvsLock = {1: false, 2: false}, mvsDone = false;
+        let mvsPairs = {1: 0, 2: 0}, mvsFirstCard = {1: null, 2: null}, mvsLock = {1: false, 2: false}, mvsDone = false, mvsSeriesWins = {1: 0, 2: 0};
+        function resetMatchingVsSeries() {
+            mvsSeriesWins = {1: 0, 2: 0};
+        }
         function initMatchingVs(source) {
             mvsDone = false;
             document.getElementById('mvs-win-p1').classList.add('hidden');
             document.getElementById('mvs-win-p2').classList.add('hidden');
+            document.getElementById('mvs-winner-burst').classList.add('hidden');
+            document.getElementById('mvs-winner-burst').classList.remove('flex');
             let selected = shuffle(source).slice(0, 4);
             if(selected.length < 4) selected = selected.concat(shuffle(wordData.filter(w => !selected.includes(w))).slice(0, 4 - selected.length));
             let cardsP1 = [], cardsP2 = [];
@@ -2062,13 +2147,46 @@
                     if(mvsPairs[player] >= 4) {
                         mvsDone = true; playSound('correct'); addExp(5);
                         document.getElementById(`mvs-win-p${player}`).classList.remove('hidden');
-                        setTimeout(() => navTo('dashboard'), 2500);
+                        setTimeout(() => endMatchingVsMatch(player), 1000);
                     }
                 }, 300);
             } else {
                 mvsLock[player] = true;
                 setTimeout(() => { mvsFirstCard[player].classList.remove('flipped'); el.classList.remove('flipped'); mvsFirstCard[player] = null; mvsLock[player] = false; }, 800);
             }
+        }
+        function endMatchingVsMatch(winner) {
+            playSound('match');
+            mvsSeriesWins[winner]++;
+            showMatchingVsWinnerBurst(winner);
+            const title = winner === 1 ? "Player 1 Wins!" : "Player 2 Wins!";
+            const extra = `
+                <div class="w-full space-y-4">
+                    <div class="flex justify-center gap-6 w-full">
+                        <div class="text-center"><div class="text-xs font-bold text-slate-400">P1 PAIRS</div><div class="text-3xl font-extrabold text-primary">${mvsPairs[1]}</div></div>
+                        <div class="text-center"><div class="text-xs font-bold text-slate-400">P2 PAIRS</div><div class="text-3xl font-extrabold text-red-500">${mvsPairs[2]}</div></div>
+                    </div>
+                    <div class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3">
+                        <div class="text-center text-[11px] font-black text-slate-400 tracking-wider mb-2">連戦スコア</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="rounded-lg bg-white border border-slate-200 py-2 text-center"><div class="text-xs font-bold text-primary">Player 1</div><div class="text-2xl font-black text-slate-800">${mvsSeriesWins[1]}勝</div></div>
+                            <div class="rounded-lg bg-white border border-slate-200 py-2 text-center"><div class="text-xs font-bold text-red-500">Player 2</div><div class="text-2xl font-black text-slate-800">${mvsSeriesWins[2]}勝</div></div>
+                        </div>
+                    </div>
+                </div>`;
+            setTimeout(() => {
+                navTo('dashboard', { keepMatchSeries: true });
+                showResult(title, "先に4組そろえたプレイヤーの勝ちです！", extra, "vs");
+            }, 1450);
+        }
+        function showMatchingVsWinnerBurst(winner) {
+            const burst = document.getElementById('mvs-winner-burst');
+            const panel = document.getElementById('mvs-winner-panel');
+            const name = document.getElementById('mvs-winner-name');
+            name.innerText = winner === 1 ? 'PLAYER 1' : 'PLAYER 2';
+            panel.className = `winner-panel ${winner === 1 ? 'p1' : 'p2'} relative z-10 rounded-2xl px-8 py-7 text-center text-white shadow-2xl border-4 border-white/80 min-w-[260px]`;
+            burst.classList.remove('hidden');
+            burst.classList.add('flex');
         }
 
         // ================== TIME ATTACK: TIME TRIAL ==================
@@ -2186,15 +2304,20 @@
         function endVsMatch() {
             playSound('match'); addExp(5);
             let title = "", desc = "", extra = `<div class="flex justify-center gap-6 mt-2 w-full"><div class="text-center"><div class="text-xs font-bold text-slate-400">P1 SCORE</div><div class="text-3xl font-extrabold text-primary">${p1Score}</div></div><div class="text-center"><div class="text-xs font-bold text-slate-400">P2 SCORE</div><div class="text-3xl font-extrabold text-red-500">${p2Score}</div></div></div>`;
+            const winner = p1Score >= 5 ? 1 : 2;
             if(isVsCpu) {
                 if(p1Score >= 5) { title = "You Win!!"; if(cpuLevel < 5) { cpuLevel++; window.localStorage.setItem('wm_pro_cpu', cpuLevel); desc = `CPUレベルが ${cpuLevel} に上がりました！`; } else { desc = "最強のCPUに勝利しました！"; } } 
                 else { title = "You Lose..."; desc = "CPUの勝利です。レベルが下がります。"; if(cpuLevel > 1) { cpuLevel--; window.localStorage.setItem('wm_pro_cpu', cpuLevel); } }
             } else { title = p1Score >= 5 ? "Player 1 Wins!" : "Player 2 Wins!"; desc = "白熱のバトルでした！"; }
-            updateDashboard(); showResult(title, desc, extra, "vs");
+            showWinnerBurst(winner === 1 ? (isVsCpu ? 'YOU WIN' : 'PLAYER 1') : (isVsCpu ? 'CPU WINS' : 'PLAYER 2'), winner, '5 POINT MATCH', 'KARUTA WINNER');
+            updateDashboard(); setTimeout(() => showResult(title, desc, extra, "vs"), 1450);
         }
 
         // ================== VS: INVADER ==================
-        let invTargets = { 1: [], 2: [] }, invActiveWords = { 1: [], 2: [] }, invPlaying = false, invScores = { 1: 0, 2: 0 }, invCombos = { 1: 0, 2: 0 }, invTime = 30.0, invData = [], invIsCpu = false, invAnimationId = null, invLastTime = 0, invSpawnTimer = { 1: 0, 2: 0 }, invCpuThinkTimer = 0;
+        let invTargets = { 1: [], 2: [] }, invActiveWords = { 1: [], 2: [] }, invPlaying = false, invScores = { 1: 0, 2: 0 }, invCombos = { 1: 0, 2: 0 }, invTime = 30.0, invData = [], invIsCpu = false, invAnimationId = null, invLastTime = 0, invSpawnTimer = { 1: 0, 2: 0 }, invCpuThinkTimer = 0, invSeriesWins = { 1: 0, 2: 0 };
+        function resetInvaderSeries() {
+            invSeriesWins = {1: 0, 2: 0};
+        }
         
         function startInvader(isCpu, source) {
             invIsCpu = isCpu; invData = shuffle(source);
@@ -2205,9 +2328,9 @@
             document.getElementById('inv-sky-1').innerHTML = ''; document.getElementById('inv-sky-2').innerHTML = '';
             
             const zone2 = document.getElementById('inv-zone-2');
-            if(isCpu || document.querySelector('input[name="opt_player"]:checked').value === '2') { zone2.classList.remove('hidden'); } else { zone2.classList.add('hidden'); }
+            zone2.classList.remove('hidden');
             
-            setupInvControls(1); if(isCpu || document.querySelector('input[name="opt_player"]:checked').value === '2') setupInvControls(2);
+            setupInvControls(1); setupInvControls(2);
             invLastTime = performance.now(); invAnimationId = requestAnimationFrame(invGameLoop);
         }
         function endInvaderEarly() { clearAllTimers(); navTo('dashboard'); }
@@ -2378,7 +2501,21 @@
 
         function endInvaderMatch() {
             playSound('match'); invPlaying = false; addExp(10);
-            let title = "", desc = "", extra = `<div class="flex justify-center gap-6 mt-2 w-full"><div class="text-center"><div class="text-xs font-bold text-slate-400">LEFT / P2</div><div class="text-3xl font-extrabold text-red-500">${invScores[2]}</div></div><div class="text-center"><div class="text-xs font-bold text-slate-400">RIGHT / P1</div><div class="text-3xl font-extrabold text-primary">${invScores[1]}</div></div></div>`;
+            let title = "", desc = "";
+            const winner = invScores[1] === invScores[2] ? 0 : (invScores[1] > invScores[2] ? 1 : 2);
+            if(!invIsCpu && winner) invSeriesWins[winner]++;
+            let seriesHtml = '';
+            if(!invIsCpu) {
+                seriesHtml = `
+                    <div class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mt-4">
+                        <div class="text-center text-[11px] font-black text-slate-400 tracking-wider mb-2">連戦スコア</div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="rounded-lg bg-white border border-slate-200 py-2 text-center"><div class="text-[10px] font-black text-slate-400">LEFT</div><div class="text-xs font-bold text-red-500">Player 2</div><div class="text-2xl font-black text-slate-800">${invSeriesWins[2]}勝</div></div>
+                            <div class="rounded-lg bg-white border border-slate-200 py-2 text-center"><div class="text-[10px] font-black text-slate-400">RIGHT</div><div class="text-xs font-bold text-primary">Player 1</div><div class="text-2xl font-black text-slate-800">${invSeriesWins[1]}勝</div></div>
+                        </div>
+                    </div>`;
+            }
+            let extra = `<div class="w-full"><div class="flex justify-center gap-6 mt-2 w-full"><div class="text-center"><div class="text-xs font-bold text-slate-400">LEFT / P2</div><div class="text-3xl font-extrabold text-red-500">${invScores[2]}</div></div><div class="text-center"><div class="text-xs font-bold text-slate-400">RIGHT / P1</div><div class="text-3xl font-extrabold text-primary">${invScores[1]}</div></div></div>${seriesHtml}</div>`;
             if(invIsCpu) {
                 if(invScores[1] >= invScores[2]) {
                     title = "You Win!!";
@@ -2387,8 +2524,12 @@
                     title = "You Lose..."; desc = "CPUの勝利です。レベルが下がります。"; 
                     if(cpuLevel > 1) { cpuLevel--; window.localStorage.setItem('wm_pro_cpu', cpuLevel); }
                 }
-            } else { title = "Time Up!"; desc = "インベーダー撃退作戦終了！"; }
-            updateDashboard(); showResult(title, desc, extra, invScores[1] >= invScores[2] ? "win" : "info");
+            } else if(winner === 0) { title = "Draw!"; desc = "同点です。もう一戦で決着をつけましょう！"; }
+            else { title = winner === 1 ? "Player 1 Wins!" : "Player 2 Wins!"; desc = "インベーダー撃退作戦終了！"; }
+            if(winner) showWinnerBurst(winner === 1 ? 'PLAYER 1' : 'PLAYER 2', winner, 'HIGH SCORE WINS', 'INVADER WINNER');
+            else showWinnerBurst('DRAW', 1, 'SAME SCORE', 'TIME UP');
+            updateDashboard();
+            setTimeout(() => showResult(title, desc, extra, winner === 2 ? "vs" : "win"), 1450);
         }
     </script>
 </body>
